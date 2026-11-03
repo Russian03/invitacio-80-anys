@@ -1,0 +1,59 @@
+.carta {
+  max-width: 680px;
+  margin: 0 var(--esp-4);
+  padding: var(--esp-5);
+  background-color: var(--color-papel);
+  color: var(--color-texto);
+  border-radius: var(--radio-papel);
+  box-shadow: var(--sombra-papel);
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 748px) {
+  .carta {
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  .carta {
+    padding: var(--esp-7);
+  }
+}
+
+.carta-cabecera {
+  text-align: center;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.titulo-script {
+  margin: var(--esp-3) 0;
+  font-family: var(--fuente-script);
+  font-size: var(--texto-titulo);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.bloque {
+  margin-top: var(--esp-6);
+  text-align: center;
+}
+
+.etiqueta {
+  margin: 0 0 var(--esp-2);
+  font-size: var(--texto-etiqueta);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.bloque p {
+  margin: 0;
+}

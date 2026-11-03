@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Invitació 80 anys</title>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <main class="mesa">
+      <article class="carta" aria-labelledby="titol">
+        <header class="carta-cabecera">
+          <p class="subtitulo">VINE A CELEBRAR</p>
+          <h1 id="titol" class="titulo-script">Lorem Ipsum</h1>
+          <p class="subtitulo">ELS 80 ANYS</p>
+        </header>
+
+        <section class="bloque" aria-labelledby="bloque-data">
+          <h2 id="bloque-data" class="etiqueta">DATA</h2>
+          <p>Dissabte, 15 de març de 2027. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        </section>
+
+        <section id="confirmacio" class="bloque" aria-labelledby="titol-confirmacio">
+          <h2 id="titol-confirmacio" class="etiqueta">CONFIRMA LA TEVA ASSISTÈNCIA</h2>
+          <form id="form-confirmacio" method="post" novalidate>
+            <div class="campo">
+              <label for="nom">Nom i cognoms (obligatori)</label>
+              <input id="nom" name="nom" type="text" autocomplete="name" required minlength="2" maxlength="80" aria-describedby="error-nom" />
+              <p id="error-nom" class="error-campo" hidden></p>
+            </div>
+
+            <fieldset class="campo" aria-describedby="error-assistira">
+              <legend>Hi seràs? (obligatori)</legend>
+              <label class="opcion"><input type="radio" name="assistira" value="sí" required /> Sí, hi seré</label>
+              <label class="opcion"><input type="radio" name="assistira" value="no" required /> No hi podré anar</label>
+              <p id="error-assistira" class="error-campo" hidden></p>
+            </fieldset>
+
+            <div class="campo">
+              <label for="alergens">Al·lèrgens o intoleràncies (opcional)</label>
+              <p id="ajuda-alergens" class="nota">Si no en tens, deixa-ho en blanc.</p>
+              <textarea id="alergens" name="alergens" rows="3" maxlength="300" aria-describedby="ajuda-alergens error-alergens"></textarea>
+              <p id="error-alergens" class="error-campo" hidden></p>
+            </div>
+
+            <div class="campo">
+              <label for="comentari">Comentari (opcional)</label>
+              <textarea id="comentari" name="comentari" rows="3" maxlength="500" aria-describedby="error-comentari"></textarea>
+              <p id="error-comentari" class="error-campo" hidden></p>
+            </div>
+
+            <p id="error-envio" class="error-envio" role="alert" hidden></p>
+            <button type="submit" class="boton-primario">Confirmar assistència</button>
+          </form>
+          <div id="exito" class="exito" role="status" aria-live="polite" hidden>
+            <p id="exito-texto"></p>
+          </div>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>

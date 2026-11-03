@@ -1,2 +1,11 @@
 .moc/referencias/
 .claude/settings.local.json
+node_modules/
+dist/
+.env*
+!.env.example
+test-results/
+playwright-report/
+coverage/
+*.jfif
+*:Zone.Identifier
