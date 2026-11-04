@@ -33,13 +33,12 @@
   --radio-control: 6px;
   --sombra-papel: 0 2px 4px rgb(0 0 0 / 0.25), 0 12px 32px rgb(0 0 0 / 0.3);
 
-  /* Tokens de movimiento (aún sin uso: el hito 1 no tiene animaciones) */
+  /* Tokens de movimiento (diseno.md → Movimiento) */
   --dur-rapida: 150ms;
   --dur-media: 300ms;
-  --dur-lenta: 600ms;
-  --dur-apertura: 1800ms;
-  --ease-salida: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-entrada: cubic-bezier(0.4, 0, 1, 1);
+  --dur-lenta: 500ms;
+  --ease-salida: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-entrada: cubic-bezier(0.64, 0, 0.78, 0);
 }
 
 @media (min-width: 900px) {
@@ -64,6 +63,12 @@ body {
   /* Única excepción a "sin degradados": viñeta de la mesa */
   background-image: radial-gradient(ellipse at center, var(--color-mesa) 40%, var(--color-mesa-vineta) 100%);
   background-attachment: fixed;
+}
+
+/* Mientras la carta no está abierta no se puede bajar (D5) */
+body[data-estado='cerrada'],
+body[data-estado='abriendo'] {
+  overflow: hidden;
 }
 
 .mesa {

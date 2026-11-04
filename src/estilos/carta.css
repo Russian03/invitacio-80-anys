@@ -57,3 +57,49 @@
 .bloque p {
   margin: 0;
 }
+
+/* Mientras no está abierta, la carta mide como mucho la pantalla (D5) */
+body[data-estado='cerrada'] .carta,
+body[data-estado='abriendo'] .carta {
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+body[data-estado='cerrada'] .carta {
+  opacity: 0;
+}
+
+/* El título recibe el foco al abrir pero no es interactivo (D8) */
+#titol:focus {
+  outline: none;
+}
+
+/* Apertura: la carta aparece con un fundido corto */
+body[data-estado='abriendo'] .carta {
+  animation: contenido-aparece var(--dur-media) linear both;
+}
+
+@keyframes contenido-aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sin destello (D4): la carta espera al estado; si JavaScript no llega en 2 s, aparece sola */
+@media (scripting: enabled) {
+  body:not([data-estado]) .carta {
+    animation: carta-sin-js var(--dur-media) var(--ease-salida) 2s both;
+  }
+}
+
+@keyframes carta-sin-js {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
