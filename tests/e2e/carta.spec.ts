@@ -51,7 +51,12 @@ async function esperarFundidoAlAbrir(page: Page) {
   expect(animaciones?.some((a) => a.duracionMs === 300 && a.propiedades.join() === 'opacity')).toBe(true)
 }
 
+/** Ventana apaisada (16:9) donde sí se reproduce el vídeo; el móvil en vertical no lo reproduce hasta 02d. */
+const VENTANA_CON_VIDEO = { width: 1600, height: 900 }
+
 test.describe('apertura con vídeo', () => {
+  test.use({ viewport: VENTANA_CON_VIDEO })
+
   test('reproduce el vídeo y al terminar abre la carta con el foco en el título', async ({ page }) => {
     await retenerVideo(page)
     await page.goto('/')
@@ -70,24 +75,257 @@ test.describe('apertura con vídeo', () => {
     await expect(video).toBeHidden()
   })
 
-  test('el vídeo se ve entero (contain) sobre el fondo de la mesa mientras se abre', async ({ page }) => {
+  test('el vídeo tiene de fondo el azul de la mesa mientras se abre', async ({ page }) => {
     await retenerVideo(page)
     await page.goto('/')
     const video = page.locator('#video-apertura')
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abriendo')
     await video.dispatchEvent('playing')
     const estilo = await video.evaluate((v) => {
-      const e = getComputedStyle(v)
       const mesa = getComputedStyle(document.documentElement).getPropertyValue('--color-mesa').trim()
       const muestra = document.createElement('i')
       muestra.style.backgroundColor = mesa
       document.body.append(muestra)
       const colorMesa = getComputedStyle(muestra).backgroundColor
       muestra.remove()
-      return { ajuste: e.objectFit, fondo: e.backgroundColor, colorMesa }
+      return { fondo: getComputedStyle(v).backgroundColor, colorMesa }
     })
-    expect(estilo.ajuste).toBe('contain')
     expect(estilo.fondo).toBe(estilo.colorMesa)
+  })
+
+  // Con vídeo (ancho/alto >= 1,47 y alto >= ~409): el vídeo ocupa el alto del viewport, sin franjas arriba ni abajo, y el papel coincide
+  for (const tam of [
+    { width: 1920, height: 1080, ajuste: 'contain' },
+    { width: 1920, height: 900, ajuste: 'contain' },
+    { width: 1440, height: 900, ajuste: 'cover' },
+    // Alto mínimo: el papel mide 617 px (>= 600) y el del fotograma coincide con el HTML
+    { width: 1920, height: 420, ajuste: 'contain' },
+  ]) {
+    test(`el vídeo cubre el alto y al terminar la carta coincide con el último fotograma (${tam.width}x${tam.height})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: tam.width, height: tam.height })
+      await retenerVideo(page)
+      await page.goto('/')
+      const video = page.locator('#video-apertura')
+      await expect(page.locator('body')).toHaveAttribute('data-estado', 'abriendo')
+      await video.dispatchEvent('playing')
+      // El fotograma se dibuja a alto completo (sin franjas arriba ni abajo): contain si la ventana es más ancha que 16:9,
+      // cover (recorta los lados) si es más estrecha. El papel mide 82,66 % de su ancho y va centrado en la caja.
+      const fotograma = await video.evaluate((v) => {
+        const caja = v.getBoundingClientRect()
+        const estilo = getComputedStyle(v)
+        const anchoFotograma = (innerHeight * 16) / 9
+        return {
+          arriba: caja.top,
+          alto: caja.height,
+          altoVentana: innerHeight,
+          ajuste: estilo.objectFit,
+          posicion: estilo.objectPosition,
+          ancho: 0.8266 * anchoFotograma,
+          izquierda: caja.left + (caja.width - 0.8266 * anchoFotograma) / 2,
+        }
+      })
+      expect(fotograma.arriba).toBe(0)
+      expect(fotograma.alto).toBe(fotograma.altoVentana)
+      expect(fotograma.ajuste).toBe(tam.ajuste)
+      expect(fotograma.posicion).toBe('50% 50%')
+      await video.dispatchEvent('ended')
+      await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta')
+      const medidas = await page.evaluate(() => {
+        const caja = document.querySelector('#carta')!.getBoundingClientRect()
+        const mesa = document.querySelector('.mesa') as HTMLElement
+        return {
+          top: caja.top,
+          left: caja.left,
+          width: caja.width,
+          scrollY: window.scrollY,
+          margen: parseFloat(getComputedStyle(mesa).paddingTop),
+        }
+      })
+      expect(Math.abs(medidas.top)).toBeLessThanOrEqual(1)
+      expect(Math.abs(medidas.width - fotograma.ancho)).toBeLessThanOrEqual(1.5)
+      expect(Math.abs(medidas.left - fotograma.izquierda)).toBeLessThanOrEqual(1.5)
+      expect(medidas.scrollY).toBe(medidas.margen)
+      // Al subir se ve el margen azul de arriba
+      await page.evaluate(() => window.scrollTo(0, 0))
+      expect(await page.locator('#carta').evaluate((c) => c.getBoundingClientRect().top)).toBe(medidas.margen)
+    })
+  }
+
+  // Entre 1,2:1 y 1,47:1 el vídeo recorta los lados (cover) y al terminar la carta queda a 16 px de cada borde (D22)
+  for (const tam of [
+    { width: 1280, height: 900 },
+    { width: 1024, height: 768 },
+    { width: 1100, height: 900 },
+  ]) {
+    test(`con ${tam.width}x${tam.height} el vídeo recorta los lados y la carta queda a 16 px`, async ({ page }) => {
+      await page.setViewportSize(tam)
+      await retenerVideo(page)
+      await page.goto('/')
+      const video = page.locator('#video-apertura')
+      await expect(page.locator('body')).toHaveAttribute('data-estado', 'abriendo')
+      await expect(video).toHaveAttribute('src', /\/video\/video_carta\.mp4$/)
+      await video.dispatchEvent('playing')
+      const fotograma = await video.evaluate((v) => {
+        const caja = v.getBoundingClientRect()
+        return { arriba: caja.top, alto: caja.height, altoVentana: innerHeight, ajuste: getComputedStyle(v).objectFit }
+      })
+      expect(fotograma.arriba).toBe(0)
+      expect(fotograma.alto).toBe(fotograma.altoVentana)
+      expect(fotograma.ajuste).toBe('cover')
+      await video.dispatchEvent('ended')
+      await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta')
+      const medidas = await page.evaluate(() => {
+        const caja = document.querySelector('#carta')!.getBoundingClientRect()
+        const mesa = document.querySelector('.mesa') as HTMLElement
+        return {
+          top: caja.top,
+          left: caja.left,
+          width: caja.width,
+          util: mesa.getBoundingClientRect().width,
+          scrollY: window.scrollY,
+          margen: parseFloat(getComputedStyle(mesa).paddingTop),
+        }
+      })
+      expect(Math.abs(medidas.left - 16)).toBeLessThanOrEqual(1)
+      expect(Math.abs(medidas.width - (medidas.util - 32))).toBeLessThanOrEqual(1)
+      expect(Math.abs(medidas.top)).toBeLessThanOrEqual(1)
+      expect(medidas.scrollY).toBe(medidas.margen)
+    })
+  }
+
+  // Sin vídeo: poco apaisada (< 1,2:1) o demasiado baja (papel < 600 px): carta con fundido de 300 ms y scroll en 0
+  for (const tam of [
+    { width: 1100, height: 1000 },
+    { width: 900, height: 900 },
+    { width: 1920, height: 380 },
+    { width: 1200, height: 400 },
+  ]) {
+    test(`con ${tam.width}x${tam.height} no se descarga el vídeo y la carta aparece con fundido`, async ({ page }) => {
+      const peticiones: string[] = []
+      page.on('request', (peticion) => peticiones.push(peticion.url()))
+      await page.setViewportSize(tam)
+      await retenerVideo(page)
+      // El fundido es una animación CSS de la carta mientras está `abriendo`: se captura al entrar en ese estado
+      await page.addInitScript(() => {
+        const w = window as unknown as { __abriendo?: unknown[] }
+        new MutationObserver(() => {
+          if (w.__abriendo || document.body?.getAttribute('data-estado') !== 'abriendo') return
+          w.__abriendo = document.getAnimations().map((animacion) => {
+            const efecto = animacion.effect as KeyframeEffect
+            return {
+              duracionMs: Number(efecto.getComputedTiming().duration),
+              propiedades: [...new Set(efecto.getKeyframes().flatMap((f) => Object.keys(f)))].filter(
+                (k) => !['offset', 'computedOffset', 'easing', 'composite'].includes(k),
+              ),
+            }
+          })
+        }).observe(document, { attributes: true, attributeFilter: ['data-estado'], subtree: true })
+      })
+      await page.goto('/')
+      await abrirCarta(page)
+      const fundido = await page.evaluate(
+        () => (window as unknown as { __abriendo?: { duracionMs: number; propiedades: string[] }[] }).__abriendo,
+      )
+      expect(fundido?.some((a) => a.duracionMs === 300 && a.propiedades.join() === 'opacity')).toBe(true)
+      expect(peticiones.filter((url) => url.includes('/video/'))).toEqual([])
+      await expect(page.locator('#video-apertura')).toBeHidden()
+      await expect(page.locator('#video-apertura')).not.toHaveAttribute('src', /.*/)
+      await expect(page.locator('#titol')).toBeFocused()
+      const medidas = await page.evaluate(() => ({
+        scrollY: window.scrollY,
+        top: document.querySelector('#carta')!.getBoundingClientRect().top,
+      }))
+      expect(medidas.scrollY).toBe(0)
+      expect(medidas.top).toBeGreaterThanOrEqual(40)
+    })
+  }
+
+  test('en vertical (móvil) tampoco se descarga el vídeo hasta 02d', async ({ page }) => {
+    const peticiones: string[] = []
+    page.on('request', (peticion) => peticiones.push(peticion.url()))
+    await page.setViewportSize({ width: 412, height: 915 })
+    await retenerVideo(page)
+    await page.goto('/')
+    await abrirCarta(page)
+    expect(peticiones.filter((url) => url.includes('/video/'))).toEqual([])
+  })
+
+  test('la apertura se da por terminada 1,5 s antes del final, sin esperar a ended; ended posterior no repite nada', async ({
+    page,
+  }) => {
+        await retenerVideo(page)
+    await page.goto('/')
+    const cuerpo = page.locator('body')
+    const video = page.locator('#video-apertura')
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abriendo')
+    await video.dispatchEvent('playing')
+    // Duración y tiempo simulados (D21)
+    await video.evaluate((v) => {
+      let actual = 0
+      Object.defineProperty(v, 'duration', { configurable: true, get: () => 10 })
+      Object.defineProperty(v, 'currentTime', { configurable: true, get: () => actual, set: (x) => (actual = x) })
+      ;(v as unknown as { __poner: (x: number) => void }).__poner = (x) => {
+        actual = x
+        v.dispatchEvent(new Event('timeupdate'))
+      }
+    })
+    const poner = (x: number) => video.evaluate((v, t) => (v as unknown as { __poner: (x: number) => void }).__poner(t), x)
+    await poner(8.4)
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abriendo')
+    await poner(8.5)
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abierta')
+    await expect(page.locator('#titol')).toBeFocused()
+    const margen = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.mesa')!).paddingTop))
+    expect(await page.evaluate(() => window.scrollY)).toBe(margen)
+    // El vídeo se suelta para que no siga decodificando
+    expect(await video.evaluate((v: HTMLVideoElement) => v.hasAttribute('src'))).toBe(false)
+    // ended posterior: ni scroll ni foco otra vez
+    await page.evaluate(() => {
+      window.scrollTo(0, 0)
+      ;(document.querySelector('a, button, input') as HTMLElement).focus({ preventScroll: true })
+    })
+    await video.dispatchEvent('ended')
+    await page.waitForTimeout(100)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    await expect(page.locator('#titol')).not.toBeFocused()
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abierta')
+  })
+
+  test('sin duración conocida, timeupdate no abre la carta: solo ended', async ({ page }) => {
+    await retenerVideo(page)
+    await page.goto('/')
+    const cuerpo = page.locator('body')
+    const video = page.locator('#video-apertura')
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abriendo')
+    await video.dispatchEvent('playing')
+    await video.evaluate((v) => {
+      Object.defineProperty(v, 'duration', { configurable: true, get: () => NaN })
+      Object.defineProperty(v, 'currentTime', { configurable: true, get: () => 99 })
+      v.dispatchEvent(new Event('timeupdate'))
+    })
+    await page.waitForTimeout(200)
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abriendo')
+    await video.dispatchEvent('ended')
+    await expect(cuerpo).toHaveAttribute('data-estado', 'abierta')
+  })
+
+  test('con el fallo del vídeo la carta aparece con el margen azul arriba (scroll 0)', async ({ page }) => {
+    await retenerVideo(page)
+    await page.goto('/')
+    await page.locator('body[data-estado="abierta"]').waitFor({ timeout: 6000 })
+    const medidas = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      top: document.querySelector('#carta')!.getBoundingClientRect().top,
+    }))
+    expect(medidas.scrollY).toBe(0)
+    expect(medidas.top).toBeGreaterThanOrEqual(40)
+  })
+
+  test('el scroll vertical reserva su hueco para no mover el papel al terminar el vídeo', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('html')).toHaveCSS('scrollbar-gutter', /stable/)
   })
 
   test('si el vídeo no arranca en 4 s, la carta aparece con un fundido', async ({ page }) => {
@@ -136,17 +374,6 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('#titol')).toBeFocused()
   })
 
-  test('no hay scroll horizontal a 360 px durante la apertura', async ({ page }) => {
-    await retenerVideo(page)
-    await page.setViewportSize({ width: 360, height: 740 })
-    await page.goto('/')
-    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abriendo')
-    const sinScroll = await page.evaluate(
-      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-    )
-    expect(sinScroll).toBe(true)
-  })
-
   test('el vídeo está en public/video', async ({ page }) => {
     const respuesta = await page.request.get('/video/video_carta.mp4')
     expect(respuesta.status()).toBe(200)
@@ -161,6 +388,7 @@ test.describe('apertura con vídeo', () => {
 })
 
 test('mientras se abre, el contenido no se puede usar', async ({ page }) => {
+  await page.setViewportSize(VENTANA_CON_VIDEO)
   await retenerVideo(page)
   await page.goto('/')
   await expect(page.locator('body')).toHaveAttribute('data-estado', /^(cerrada|abriendo)$/)

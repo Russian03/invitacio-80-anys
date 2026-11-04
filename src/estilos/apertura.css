@@ -11,9 +11,24 @@ body[data-estado='abriendo'] .video-apertura {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* Siempre a alto completo y centrado: en ventanas más estrechas que 16:9 se recortan los lados (cover) */
+  object-fit: cover;
+  object-position: center;
   background-color: var(--color-mesa);
   pointer-events: none;
+}
+
+/* En ventanas más anchas que 16:9 quedan franjas laterales del azul de la mesa (contain) */
+@media (min-aspect-ratio: 16/9) {
+  body[data-estado='cerrada'] .video-apertura,
+  body[data-estado='abriendo'] .video-apertura {
+    object-fit: contain;
+  }
+}
+
+/* Sin vídeo (movimiento reducido o ventana poco apaisada, PROPORCION_MINIMA_VIDEO) */
+body[data-sin-video] .video-apertura {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

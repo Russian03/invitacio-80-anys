@@ -1,24 +1,29 @@
 .carta {
-  max-width: 680px;
-  margin: 0 var(--esp-4);
+  /* Como mucho el papel del último fotograma: 0,8266 × 16/9 × alto = 146,94dvh (D19, T18d), pero nunca menos del
+     ancho mínimo (D23); en ventanas estrechas manda el ancho menos los márgenes (sin scroll horizontal) */
+  width: min(calc(100% - 2 * var(--esp-4)), max(146.94dvh, var(--ancho-minimo-papel)));
+  margin-inline: auto;
   padding: var(--esp-5);
+  /* Papel del último fotograma del vídeo (D18): baja con el scroll, el pliegue se repite */
   background-color: var(--color-papel);
+  background-image: url('/img/papel.webp');
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  background-position: top center;
   color: var(--color-texto);
-  border-radius: var(--radio-papel);
-  box-shadow: var(--sombra-papel);
   overflow-wrap: anywhere;
-}
-
-@media (min-width: 748px) {
-  .carta {
-    margin-inline: auto;
-  }
 }
 
 @media (min-width: 900px) {
   .carta {
     padding: var(--esp-7);
   }
+}
+
+/* Columna de lectura */
+.carta > * {
+  max-width: 680px;
+  margin-inline: auto;
 }
 
 .carta-cabecera {
@@ -74,15 +79,13 @@ body[data-estado='cerrada'] .carta {
   outline: none;
 }
 
-/* Apertura: la carta espera a que acabe el vídeo; con movimiento reducido (sin vídeo) aparece con un fundido */
+/* Apertura: la carta espera a que acabe el vídeo; sin vídeo (movimiento reducido o ventana poco apaisada) aparece con un fundido */
 body[data-estado='abriendo'] .carta {
   opacity: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  body[data-estado='abriendo'] .carta {
-    animation: contenido-aparece var(--dur-media) linear both;
-  }
+body[data-sin-video][data-estado='abriendo'] .carta {
+  animation: contenido-aparece var(--dur-media) linear both;
 }
 
 @keyframes contenido-aparece {

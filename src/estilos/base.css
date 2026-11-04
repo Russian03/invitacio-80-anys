@@ -1,6 +1,6 @@
 :root {
-  --color-mesa: #1e3a7a;
-  --color-mesa-vineta: #14285a;
+  /* Azul medido en el último fotograma del vídeo (rgb 20, 70, 118 en el PNG; #164878 = rgb 22, 72, 120 medido en el vídeo reproducido, H.264 desplaza el tono) */
+  --color-mesa: #164878;
   --color-papel: #f3eee1;
   --color-texto: #12388f;
   --color-texto-sec: #3d4f7c;
@@ -29,9 +29,10 @@
   --esp-7: 48px;
   --esp-8: 64px;
 
-  --radio-papel: 2px;
   --radio-control: 6px;
-  --sombra-papel: 0 2px 4px rgb(0 0 0 / 0.25), 0 12px 32px rgb(0 0 0 / 0.3);
+  --margen-mesa: var(--esp-7);
+  /* = ANCHO_MINIMO_PAPEL_PX de src/carta/video.ts (D23); un test e2e comprueba que coinciden */
+  --ancho-minimo-papel: 600px;
 
   /* Tokens de movimiento (diseno.md → Movimiento) */
   --dur-rapida: 150ms;
@@ -44,7 +45,13 @@
 @media (min-width: 900px) {
   :root {
     --texto-cuerpo: 1.375rem;
+    --margen-mesa: var(--esp-8);
   }
+}
+
+/* El hueco de la barra de scroll no cambia al quitar el bloqueo: el papel no se mueve (T18b) */
+html {
+  scrollbar-gutter: stable;
 }
 
 *,
@@ -60,9 +67,6 @@ body {
   font-size: var(--texto-cuerpo);
   line-height: var(--interlineado);
   background-color: var(--color-mesa);
-  /* Única excepción a "sin degradados": viñeta de la mesa */
-  background-image: radial-gradient(ellipse at center, var(--color-mesa) 40%, var(--color-mesa-vineta) 100%);
-  background-attachment: fixed;
 }
 
 /* Mientras la carta no está abierta no se puede bajar (D5) */
@@ -72,7 +76,7 @@ body[data-estado='abriendo'] {
 }
 
 .mesa {
-  padding: var(--esp-5) 0;
+  padding-block: var(--margen-mesa);
 }
 
 :focus-visible {

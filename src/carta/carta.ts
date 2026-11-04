@@ -6,7 +6,7 @@ import {
   prefiereMovimientoReducido,
 } from '../movimiento'
 import { ESTADO_INICIAL, contenidoInerte, transicion, type EventoCarta } from './estado-carta'
-import { TOPE_ARRANQUE_VIDEO_MS, VIDEO_APERTURA, esperarEvento, topeFin } from './video'
+import { TOPE_ARRANQUE_VIDEO_MS, VIDEO_APERTURA, esperarEvento, esperarFinVideo, topeFin, ventanaAdmiteVideo } from './video'
 
 /** Espera a que acaben las animaciones de la raíz; las canceladas (finished rechaza) se absorben. */
 function terminadas(raiz: Element): Promise<unknown> {
@@ -15,8 +15,8 @@ function terminadas(raiz: Element): Promise<unknown> {
 
 /**
  * Lleva la carta de cerrada a abierta: el estado vive en `data-estado` del body.
- * Se abre al terminar el vídeo de apertura; con movimiento reducido (sin vídeo) o
- * si el vídeo falla, con un fundido. Si falta algún elemento, no toca nada y la carta
+ * Se abre al terminar el vídeo de apertura; con movimiento reducido o ventana poco
+ * apaisada (sin vídeo) o si el vídeo falla, con un fundido. Si falta algún elemento, no toca nada y la carta
  * queda visible.
  */
 export function iniciarCarta(body: HTMLElement): void {
@@ -46,15 +46,20 @@ export function iniciarCarta(body: HTMLElement): void {
     }
   }
 
-  // Estado seguro: carta abierta con fundido y descarga del vídeo soltada (D10, D14). Llamarla dos veces es inocuo
-  const fallar = () => {
-    pasar('fallo')
+  const soltarVideo = () => {
     video.pause()
     video.removeAttribute('src')
     video.load()
   }
 
+  // Estado seguro: carta abierta con fundido y descarga del vídeo soltada (D10, D14). Llamarla dos veces es inocuo
+  const fallar = () => {
+    pasar('fallo')
+    soltarVideo()
+  }
+
   const abrirSinVideo = async () => {
+    body.dataset.sinVideo = ''
     pasar('abrir')
     await conTope(terminadas(carta), TOPE_APERTURA_MS)
     pasar('fin-animacion')
@@ -68,15 +73,22 @@ export function iniciarCarta(body: HTMLElement): void {
     pasar('abrir')
     video.play().catch(fallar)
     if (!(await arranque)) return fallar()
-    const fin = await esperarEvento(video, 'ended', ['error'], topeFin(video.duration))
+    const fin = await esperarFinVideo(video, topeFin(video.duration))
     if (estado !== 'abriendo') return
     if (!fin) return fallar()
     pasar('fin-animacion')
+    // El último fotograma llega al borde superior: se baja el scroll el margen de mesa para que
+    // el papel de la carta coincida con él; al subir se ve el margen azul (T18b)
+    window.scrollTo(0, carta.getBoundingClientRect().top + window.scrollY)
+    // Con el corte anticipado el vídeo sigue en marcha: se suelta para que no decodifique en vano
+    soltarVideo()
   }
 
   const abrir = async () => {
     await conTope(document.fonts?.ready ?? Promise.resolve(), TOPE_FUENTES_MS)
-    if (prefiereMovimientoReducido()) return abrirSinVideo()
+    if (prefiereMovimientoReducido() || !ventanaAdmiteVideo(window.innerWidth, window.innerHeight)) {
+      return abrirSinVideo()
+    }
     return abrirConVideo()
   }
 
