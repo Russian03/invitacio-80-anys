@@ -1,5 +1,6 @@
 import './estilos/base.css'
 import './estilos/carta.css'
+import './estilos/apertura.css'
 import './estilos/formulario.css'
 import { iniciarCarta } from './carta/carta'
 import { envioSimulado } from './formulario/envio'

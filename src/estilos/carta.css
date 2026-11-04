@@ -74,9 +74,15 @@ body[data-estado='cerrada'] .carta {
   outline: none;
 }
 
-/* Apertura: la carta aparece con un fundido corto */
+/* Apertura: la carta espera a que acabe el vídeo; con movimiento reducido (sin vídeo) aparece con un fundido */
 body[data-estado='abriendo'] .carta {
-  animation: contenido-aparece var(--dur-media) linear both;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-estado='abriendo'] .carta {
+    animation: contenido-aparece var(--dur-media) linear both;
+  }
 }
 
 @keyframes contenido-aparece {

@@ -13,3 +13,8 @@ export function conTope(promesa: Promise<unknown>, ms: number): Promise<void> {
     promesa.then(terminar, terminar)
   })
 }
+
+/** JS decide si descarga el vídeo, así que lee la preferencia del sistema (D16). */
+export function prefiereMovimientoReducido(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}

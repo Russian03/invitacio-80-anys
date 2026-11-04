@@ -1,5 +1,8 @@
 import { abrirCarta, expect, test } from './fixtures'
 
+// El vídeo de apertura no se reproduce en el Chromium de Playwright (D21)
+test.use({ reducedMotion: 'reduce' })
+
 test('muestra la mesa azul y la carta en catalán', async ({ page, isMobile }) => {
   await page.goto('/')
   await abrirCarta(page)

@@ -1,0 +1,23 @@
+/* Vídeo de apertura (D13): sin JS o con movimiento reducido no se ve */
+.video-apertura {
+  display: none;
+}
+
+body[data-estado='cerrada'] .video-apertura,
+body[data-estado='abriendo'] .video-apertura {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: var(--color-mesa);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-estado] .video-apertura {
+    display: none;
+  }
+}
