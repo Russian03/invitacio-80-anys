@@ -1,5 +1,8 @@
 import { abrirCarta, expect, test } from './fixtures'
-import { ANCHO_MINIMO_PAPEL_PX } from '../../src/carta/video'
+
+// Ancho mínimo del papel (D23); `--ancho-minimo-papel` de base.css. Se revisa en 02g (T31)
+const ANCHO_MINIMO_PAPEL_PX = 600
+
 
 // El vídeo de apertura no se reproduce en el Chromium de Playwright (D21)
 test.use({ reducedMotion: 'reduce' })
@@ -146,14 +149,6 @@ test('con una ventana más cuadrada que el papel del vídeo, la carta no se pasa
 })
 
 test.describe('ancho mínimo del papel (D23)', () => {
-  test('el CSS y video.ts piden el mismo ancho mínimo', async ({ page }) => {
-    await page.goto('/')
-    const css = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue('--ancho-minimo-papel').trim(),
-    )
-    expect(css).toBe(`${ANCHO_MINIMO_PAPEL_PX}px`)
-  })
-
   // Nunca baja de min(600, ancho útil − 32); el ancho útil depende del hueco del scroll, por eso se mide
   for (const tam of [
     { width: 1920, height: 360, tope: true },

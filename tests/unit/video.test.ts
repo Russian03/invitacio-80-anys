@@ -1,14 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  ANCHO_MINIMO_PAPEL_PX,
-  PAPEL_POR_ALTO,
-  PROPORCION_MINIMA_VIDEO,
-  RECORTE_FINAL_S,
-  finAlcanzado,
+  SOBRE_QUIETO_S,
+  VIDEO_APERTURA,
   esperarEvento,
-  esperarFinVideo,
+  esperarMomentoVideo,
+  momentoAlcanzado,
   topeFin,
-  ventanaAdmiteVideo,
 } from '../../src/carta/video'
 
 describe('esperarEvento', () => {
@@ -67,38 +64,39 @@ describe('topeFin', () => {
   })
 })
 
-describe('finAlcanzado', () => {
-  it('el recorte final es de 1,5 s', () => {
-    expect(RECORTE_FINAL_S).toBe(1.5)
-  })
-
-  it('es false antes de duración - recorte y true justo en él y después', () => {
-    expect(finAlcanzado(10, 8.49)).toBe(false)
-    expect(finAlcanzado(10, 8.5)).toBe(true)
-    expect(finAlcanzado(10, 10)).toBe(true)
-  })
-
-  it('admite un recorte distinto', () => {
-    expect(finAlcanzado(10, 8.9, 1)).toBe(false)
-    expect(finAlcanzado(10, 9, 1)).toBe(true)
-  })
-
-  it.each([NaN, Infinity, 0, -3, 1.5, 1])('con duración %s solo vale ended (false)', (duracion) => {
-    expect(finAlcanzado(duracion, 100)).toBe(false)
-  })
-
-  it.each([NaN, -Infinity])('con tiempo actual %s es false', (actual) => {
-    expect(finAlcanzado(10, actual)).toBe(false)
+describe('VIDEO_APERTURA', () => {
+  it('apunta al vídeo del sobre', () => {
+    expect(VIDEO_APERTURA).toBe('/video/sobre.mp4')
   })
 })
 
-describe('esperarFinVideo', () => {
+describe('momentoAlcanzado', () => {
+  it('el momento del sobre quieto es 1,4 s', () => {
+    expect(SOBRE_QUIETO_S).toBe(1.4)
+  })
+
+  it('es false justo antes del momento y true en él y después', () => {
+    expect(momentoAlcanzado(1.39, SOBRE_QUIETO_S)).toBe(false)
+    expect(momentoAlcanzado(1.4, SOBRE_QUIETO_S)).toBe(true)
+    expect(momentoAlcanzado(3.04, SOBRE_QUIETO_S)).toBe(true)
+  })
+
+  it.each([NaN, -Infinity, Infinity])('con tiempo actual %s es false', (actual) => {
+    expect(momentoAlcanzado(actual, 1.4)).toBe(false)
+  })
+
+  it.each([NaN, Infinity])('con momento %s es false', (momento) => {
+    expect(momentoAlcanzado(2, momento)).toBe(false)
+  })
+})
+
+describe('esperarMomentoVideo', () => {
   /** Vídeo falso: EventTarget con duración, tiempo y rVFC simulados (los pendientes quedan en `pendientes`). */
   function crearVideo(conRvfc = true) {
     const video = new EventTarget() as EventTarget & Record<string, unknown>
     const pendientes = new Map<number, () => void>()
     let siguiente = 1
-    video.duration = 10
+    video.duration = 3.04
     video.currentTime = 0
     const pedir = vi.fn((cb: () => void) => {
       const id = siguiente++
@@ -131,9 +129,9 @@ describe('esperarFinVideo', () => {
 
   it('al cortar por rVFC no queda ningún rVFC pendiente', async () => {
     const { video, objetivo, pendientes, fotograma } = crearVideo()
-    const espera = esperarFinVideo(video, 20000)
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
     expect(pendientes.size).toBe(1)
-    objetivo.currentTime = 9
+    objetivo.currentTime = 1.4
     fotograma()
     await expect(espera).resolves.toBe(true)
     expect(pendientes.size).toBe(0)
@@ -141,16 +139,16 @@ describe('esperarFinVideo', () => {
 
   it('mientras no llega el corte, el rVFC se vuelve a armar', () => {
     const { video, objetivo, pendientes, fotograma } = crearVideo()
-    void esperarFinVideo(video, 20000)
-    objetivo.currentTime = 1
+    void esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
+    objetivo.currentTime = 1.3
     fotograma()
     expect(pendientes.size).toBe(1)
   })
 
   it('timeupdate o ended posteriores a resolver no hacen nada', async () => {
     const { video, objetivo, pedir, cancelar, fotograma } = crearVideo()
-    const espera = esperarFinVideo(video, 20000)
-    objetivo.currentTime = 9
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
+    objetivo.currentTime = 1.4
     fotograma()
     await espera
     const llamadasPedir = pedir.mock.calls.length
@@ -165,8 +163,8 @@ describe('esperarFinVideo', () => {
 
   it('el corte por rVFC y por timeupdate no duplican la limpieza', async () => {
     const { video, objetivo, cancelar, fotograma } = crearVideo()
-    const espera = esperarFinVideo(video, 20000)
-    objetivo.currentTime = 9
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
+    objetivo.currentTime = 1.4
     objetivo.dispatchEvent(new Event('timeupdate'))
     fotograma()
     fotograma()
@@ -177,9 +175,9 @@ describe('esperarFinVideo', () => {
 
   it('un fotograma que llega tras resolver por timeupdate no re-arma el callback', async () => {
     const { video, objetivo, pendientes, pedir } = crearVideo()
-    const espera = esperarFinVideo(video, 20000)
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
     const cb = [...pendientes.values()][0]
-    objetivo.currentTime = 9
+    objetivo.currentTime = 1.4
     objetivo.dispatchEvent(new Event('timeupdate'))
     await espera
     const antes = pedir.mock.calls.length
@@ -190,7 +188,7 @@ describe('esperarFinVideo', () => {
 
   it('resuelve true con ended y limpia', async () => {
     const { video, objetivo, pendientes } = crearVideo()
-    const espera = esperarFinVideo(video, 20000)
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
     objetivo.dispatchEvent(new Event('ended'))
     await expect(espera).resolves.toBe(true)
     expect(pendientes.size).toBe(0)
@@ -199,7 +197,7 @@ describe('esperarFinVideo', () => {
 
   it('resuelve false con error y limpia', async () => {
     const { video, objetivo, pendientes } = crearVideo()
-    const espera = esperarFinVideo(video, 20000)
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
     objetivo.dispatchEvent(new Event('error'))
     await expect(espera).resolves.toBe(false)
     expect(pendientes.size).toBe(0)
@@ -208,7 +206,7 @@ describe('esperarFinVideo', () => {
 
   it('resuelve false al vencer el tope y limpia', async () => {
     const { video, pendientes } = crearVideo()
-    const espera = esperarFinVideo(video, 1000)
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 1000)
     await vi.advanceTimersByTimeAsync(1000)
     await expect(espera).resolves.toBe(false)
     expect(pendientes.size).toBe(0)
@@ -216,56 +214,30 @@ describe('esperarFinVideo', () => {
 
   it('sin requestVideoFrameCallback corta por timeupdate', async () => {
     const { video, objetivo } = crearVideo(false)
-    const espera = esperarFinVideo(video, 20000)
-    objetivo.currentTime = 9
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
+    objetivo.currentTime = 1.4
     objetivo.dispatchEvent(new Event('timeupdate'))
     await expect(espera).resolves.toBe(true)
   })
-})
 
-describe('ventanaAdmiteVideo', () => {
-  it('admite ventanas de ordenador habituales (16:9, 16:10 y ultrapanorámicas)', () => {
-    expect(ventanaAdmiteVideo(1920, 1080)).toBe(true)
-    expect(ventanaAdmiteVideo(1440, 900)).toBe(true)
-    expect(ventanaAdmiteVideo(2560, 1080)).toBe(true)
+  it('sin duración conocida igualmente corta al llegar al momento', async () => {
+    const { video, objetivo } = crearVideo()
+    objetivo.duration = NaN
+    const espera = esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000)
+    objetivo.currentTime = 1.4
+    objetivo.dispatchEvent(new Event('timeupdate'))
+    await expect(espera).resolves.toBe(true)
   })
 
-  it('admite justo la proporción mínima y no una pizca menos', () => {
-    expect(ventanaAdmiteVideo(PROPORCION_MINIMA_VIDEO * 1000, 1000)).toBe(true)
-    expect(ventanaAdmiteVideo(PROPORCION_MINIMA_VIDEO * 1000 - 1, 1000)).toBe(false)
-  })
-
-  it('admite ventanas algo más cuadradas, desde 1,2:1 (1280x900, 1024x768)', () => {
-    expect(ventanaAdmiteVideo(1280, 900)).toBe(true)
-    expect(ventanaAdmiteVideo(1024, 768)).toBe(true)
-  })
-
-  it('no admite ventanas casi cuadradas ni verticales', () => {
-    expect(ventanaAdmiteVideo(1199, 1000)).toBe(false)
-    expect(ventanaAdmiteVideo(1000, 1000)).toBe(false)
-    expect(ventanaAdmiteVideo(412, 915)).toBe(false)
-  })
-
-  it('no admite ventanas anchas y bajas donde el papel quedaría por debajo del ancho mínimo', () => {
-    expect(ventanaAdmiteVideo(1920, 400)).toBe(false)
-    expect(ventanaAdmiteVideo(1920, 408)).toBe(false)
-    expect(ventanaAdmiteVideo(1920, 409)).toBe(true)
-    expect(ventanaAdmiteVideo(1200, 400)).toBe(false)
-    expect(ventanaAdmiteVideo(2560, 1080)).toBe(true)
-  })
-
-  it('el mínimo de alto es justo el que da el ancho mínimo del papel', () => {
-    const altoMinimo = ANCHO_MINIMO_PAPEL_PX / PAPEL_POR_ALTO
-    expect(ANCHO_MINIMO_PAPEL_PX).toBe(600)
-    expect(ventanaAdmiteVideo(2000, altoMinimo)).toBe(true)
-    expect(ventanaAdmiteVideo(2000, altoMinimo - 0.5)).toBe(false)
-  })
-
-  it('no admite medidas imposibles (0, negativas, NaN, Infinity)', () => {
-    expect(ventanaAdmiteVideo(1920, 0)).toBe(false)
-    expect(ventanaAdmiteVideo(0, 1080)).toBe(false)
-    expect(ventanaAdmiteVideo(-1920, 1080)).toBe(false)
-    expect(ventanaAdmiteVideo(NaN, 1080)).toBe(false)
-    expect(ventanaAdmiteVideo(1920, Infinity)).toBe(false)
+  it('antes del momento, timeupdate no resuelve', async () => {
+    const { video, objetivo } = crearVideo()
+    let resultado: boolean | undefined
+    void esperarMomentoVideo(video, SOBRE_QUIETO_S, 20000).then((v) => {
+      resultado = v
+    })
+    objetivo.currentTime = 1.39
+    objetivo.dispatchEvent(new Event('timeupdate'))
+    await vi.advanceTimersByTimeAsync(10)
+    expect(resultado).toBeUndefined()
   })
 })

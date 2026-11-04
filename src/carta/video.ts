@@ -1,45 +1,24 @@
 /** Único sitio donde se elige el vídeo; aquí irá la elección por orientación. */
-export const VIDEO_APERTURA = '/video/video_carta.mp4'
+export const VIDEO_APERTURA = '/video/sobre.mp4'
 
-/**
- * Proporción mínima (ancho/alto) de ventana para reproducir el vídeo 16:9 (D22). Entre 1,2 y ≈1,49 el
- * vídeo (`cover`) recorta los lados y su papel llega al borde de la ventana, mientras que el papel HTML
- * queda a 16 px de cada lado: salto visible de 16 px por lado, aceptado. Por debajo se muestra la carta
- * con fundido y no se descarga el vídeo.
- * Pendiente (02d): el móvil en vertical queda sin vídeo hasta que llegue el vídeo 9:16.
- */
-export const PROPORCION_MINIMA_VIDEO = 1.2
-
-/** Papel del último fotograma respecto al alto de la ventana: 0,8266 × 16/9 (el `146.94dvh` de `carta.css`). */
-export const PAPEL_POR_ALTO = 1.4694
-
-/** Ancho mínimo del papel (D23). `--ancho-minimo-papel` de `base.css` debe valer lo mismo (lo comprueba un test). */
-export const ANCHO_MINIMO_PAPEL_PX = 600
+/** Imagen fija del sobre abierto y vacío (último fotograma): sustituye al vídeo al quedar quieto el sobre. */
+export const IMAGEN_SOBRE = '/img/sobre-abierto.webp'
 
 export const TOPE_ARRANQUE_VIDEO_MS = 4000
+/** Espera máxima a que la imagen fija del sobre se descargue y decodifique (D10, D34). */
+export const TOPE_IMAGEN_MS = 4000
 export const MARGEN_FIN_VIDEO_MS = 2000
 export const TOPE_FIN_VIDEO_MS = 15000
 
 /**
- * Segundos finales del vídeo que se recortan: el papel ya está quieto y la carta tarda en aparecer.
- * La apertura se da por terminada al llegar a `duración - RECORTE_FINAL_S`, igual que con `ended`.
+ * Segundo del vídeo (3,04 s) en que el sobre ya está abierto y quieto (≈ fotograma 33, margen de 2 sobre el 32):
+ * a partir de aquí se suelta el vídeo y se queda la imagen fija.
  */
-export const RECORTE_FINAL_S = 1.5
+export const SOBRE_QUIETO_S = 1.4
 
-/**
- * `true` si la ventana es lo bastante apaisada y alta para reproducir el vídeo: así el papel del
- * fotograma (`alto × PAPEL_POR_ALTO`) no baja del ancho mínimo y coincide con el papel HTML.
- * Medidas no válidas, `false`.
- */
-export function ventanaAdmiteVideo(ancho: number, alto: number): boolean {
-  if (!Number.isFinite(ancho) || !Number.isFinite(alto) || ancho <= 0 || alto <= 0) return false
-  return ancho / alto >= PROPORCION_MINIMA_VIDEO && alto * PAPEL_POR_ALTO >= ANCHO_MINIMO_PAPEL_PX
-}
-
-/** `true` si el vídeo ha llegado al punto de corte. Con duración desconocida o ≤ recorte, siempre `false` (solo vale `ended`). */
-export function finAlcanzado(duracionS: number, actualS: number, recorteS: number = RECORTE_FINAL_S): boolean {
-  if (!Number.isFinite(duracionS) || duracionS <= recorteS || !Number.isFinite(actualS)) return false
-  return actualS >= duracionS - recorteS
+/** `true` si el tiempo actual del vídeo ha llegado al momento. Tiempos no finitos, `false`. */
+export function momentoAlcanzado(actualS: number, momentoS: number): boolean {
+  return Number.isFinite(actualS) && Number.isFinite(momentoS) && actualS >= momentoS
 }
 
 /**
@@ -73,16 +52,16 @@ export function topeFin(duracionS: number): number {
 }
 
 /**
- * `true` si el vídeo termina (`ended` o corte de `RECORTE_FINAL_S`); `false` si hay `error` o vence el tope.
- * El corte se mira con `requestVideoFrameCallback` si existe y con `timeupdate` en cualquier caso.
+ * `true` si el vídeo llega a `momentoS` (o termina con `ended`); `false` si hay `error` o vence el tope.
+ * El momento se mira con `requestVideoFrameCallback` si existe y con `timeupdate` en cualquier caso.
  * Nunca rechaza; al resolver quita listeners, callback y temporizador.
  */
-export function esperarFinVideo(video: HTMLVideoElement, ms: number): Promise<boolean> {
+export function esperarMomentoVideo(video: HTMLVideoElement, momentoS: number, ms: number): Promise<boolean> {
   return new Promise((resolver) => {
     let idFotograma: number | undefined
     let terminado = false
     const comprobar = () => {
-      if (finAlcanzado(video.duration, video.currentTime)) terminar(true)
+      if (momentoAlcanzado(video.currentTime, momentoS)) terminar(true)
     }
     const alFotograma = () => {
       comprobar()

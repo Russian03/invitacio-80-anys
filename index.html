@@ -9,7 +9,11 @@
   </head>
   <body>
     <main class="mesa">
-      <video id="video-apertura" class="video-apertura" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1"></video>
+      <div id="fondo-escena" class="fondo-escena" aria-hidden="true"></div>
+      <div id="escenario" class="escenario" aria-hidden="true">
+        <img id="sobre-abierto" class="sobre-abierto" alt="" width="1280" height="720" decoding="async" />
+        <video id="video-apertura" class="video-apertura" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1"></video>
+      </div>
       <article id="carta" class="carta" aria-labelledby="titol">
         <header class="carta-cabecera">
           <p class="subtitulo">VINE A CELEBRAR</p>

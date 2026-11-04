@@ -1,38 +1,82 @@
-/* Vídeo de apertura (D13): sin JS o con movimiento reducido no se ve */
-.video-apertura {
+/*
+ * Escenario del sobre (02f). Un escenario 16:9 fijo con la imagen fija debajo y el vídeo encima, sobre un fondo
+ * de escena en degradado que imita el del vídeo. Sin JS o con movimiento reducido no se ve nada de esto.
+ * El tamaño y la posición repiten `cajaEscenario()` de src/carta/geometria.ts.
+ */
+.fondo-escena,
+.escenario {
   display: none;
-}
-
-body[data-estado='cerrada'] .video-apertura,
-body[data-estado='abriendo'] .video-apertura {
   position: fixed;
-  inset: 0;
   z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* Siempre a alto completo y centrado: en ventanas más estrechas que 16:9 se recortan los lados (cover) */
-  object-fit: cover;
-  object-position: center;
-  background-color: var(--color-mesa);
   pointer-events: none;
 }
 
-/* En ventanas más anchas que 16:9 quedan franjas laterales del azul de la mesa (contain) */
-@media (min-aspect-ratio: 16/9) {
-  body[data-estado='cerrada'] .video-apertura,
-  body[data-estado='abriendo'] .video-apertura {
-    object-fit: contain;
-  }
+.fondo-escena {
+  inset: 0;
+  z-index: 0;
+  background-image: linear-gradient(135deg, var(--escena-claro), var(--escena-oscuro));
 }
 
-/* Sin vídeo (movimiento reducido o ventana poco apaisada, PROPORCION_MINIMA_VIDEO) */
-body[data-sin-video] .video-apertura {
+.escenario {
+  --ancho: min(max(100vw, 177.78dvh), var(--escenario-max-ancho), var(--escenario-max-alto));
+  --alto: calc(var(--ancho) * 9 / 16);
+  /* Holgura para mover la caja sin dejar huecos: lo que le sobra si cubre la ventana; sin límite si no la cubre */
+  --holgura-x: max(calc((var(--ancho) - 100vw) / 2), calc(1000 * (100vw - var(--ancho))));
+  --holgura-y: max(calc((var(--alto) - 100dvh) / 2), calc(1000 * (100dvh - var(--alto))));
+  width: var(--ancho);
+  aspect-ratio: 16 / 9;
+  left: calc(50vw - 0.5 * var(--ancho) + clamp(-1 * var(--holgura-x), (0.5 - var(--sobre-centro-x)) * var(--ancho), var(--holgura-x)));
+  top: calc(50dvh - 0.5 * var(--alto) + clamp(-1 * var(--holgura-y), (0.5 - var(--sobre-centro-y)) * var(--alto), var(--holgura-y)));
+  /* Los bordes (6 %) se funden con el fondo de escena: disimula la costura si el escenario no llega a la ventana */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent);
+  mask-composite: intersect;
+}
+
+.sobre-abierto,
+.video-apertura {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* La imagen fija espera debajo hasta que el sobre queda quieto */
+.sobre-abierto {
+  visibility: hidden;
+}
+
+body[data-estado='cerrada'] .fondo-escena,
+body[data-estado='cerrada'] .escenario,
+body[data-estado='abriendo'] .fondo-escena,
+body[data-estado='abriendo'] .escenario,
+body[data-fase] .fondo-escena,
+body[data-fase] .escenario {
+  display: block;
+}
+
+/* Sobre quieto (SOBRE_QUIETO_S): la imagen fija sustituye al vídeo, que ya está soltado */
+body[data-fase='papel-sube'] .sobre-abierto {
+  visibility: visible;
+}
+
+body[data-fase='papel-sube'] .video-apertura {
+  visibility: hidden;
+}
+
+/* Sin vídeo (movimiento reducido) */
+body[data-sin-video] .fondo-escena,
+body[data-sin-video] .escenario {
   display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body[data-estado] .video-apertura {
+  body[data-estado] .fondo-escena,
+  body[data-estado] .escenario {
     display: none;
   }
 }

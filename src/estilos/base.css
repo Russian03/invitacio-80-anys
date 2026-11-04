@@ -31,8 +31,16 @@
 
   --radio-control: 6px;
   --margen-mesa: var(--esp-7);
-  /* = ANCHO_MINIMO_PAPEL_PX de src/carta/video.ts (D23); un test e2e comprueba que coinciden */
   --ancho-minimo-papel: 600px;
+
+  /* Escenario del sobre (D30): = CENTRO_SOBRE, LIMITE_ANCHO_VW y LIMITE_ALTO_DVH de src/carta/geometria.ts; un test e2e lo comprueba */
+  --sobre-centro-x: 0.495;
+  --sobre-centro-y: 0.441;
+  --escenario-max-ancho: 206.3vw;
+  --escenario-max-alto: 225.3dvh;
+  /* Degradado de escena: imita el fondo del vídeo (rgb medidos en el último fotograma) */
+  --escena-claro: rgb(49 56 81);
+  --escena-oscuro: rgb(19 22 40);
 
   /* Tokens de movimiento (diseno.md → Movimiento) */
   --dur-rapida: 150ms;

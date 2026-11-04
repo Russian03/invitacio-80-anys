@@ -12,6 +12,9 @@
   background-position: top center;
   color: var(--color-texto);
   overflow-wrap: anywhere;
+  /* Por encima del escenario mientras la escena se retira tras el fundido */
+  position: relative;
+  z-index: 2;
 }
 
 @media (min-width: 900px) {
