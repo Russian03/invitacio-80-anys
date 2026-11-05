@@ -5,14 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Invitació 80 anys</title>
+    <link rel="preload" as="image" href="/img/fondo-escena.webp" type="image/webp" />
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
-    <main class="mesa">
-      <div id="fondo-escena" class="fondo-escena" aria-hidden="true"></div>
+    <div id="fondo-escena" class="fondo-escena" aria-hidden="true"></div>
+    <main id="mesa" class="mesa">
       <div id="escenario" class="escenario" aria-hidden="true">
         <img id="sobre-abierto" class="sobre-abierto" alt="" width="1280" height="720" decoding="async" />
         <video id="video-apertura" class="video-apertura" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1"></video>
+      </div>
+      <div id="boca" class="boca" aria-hidden="true">
+        <div id="papel-apertura" class="papel-apertura"></div>
       </div>
       <article id="carta" class="carta" aria-labelledby="titol">
         <header class="carta-cabecera">

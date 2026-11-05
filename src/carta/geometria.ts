@@ -22,23 +22,27 @@ export interface Transformacion {
   readonly escala: number
 }
 
-export interface PuntosBoca {
-  readonly izquierda: Punto
-  readonly derecha: Punto
-  readonly vertice: Punto
-}
-
 export const FOTOGRAMA = { ancho: 1280, alto: 720 } as const
 
 /** Caja del sobre abierto dentro del fotograma. */
 export const CAJA_SOBRE = { x0: 348, y0: 56, x1: 919, y1: 579 } as const
 
-/** Boca del sobre: dos esquinas y el vértice de la V. */
-export const BOCA: PuntosBoca = {
-  izquierda: { x: 350, y: 308 },
-  derecha: { x: 918, y: 308 },
-  vertice: { x: 640, y: 400 },
-}
+/** Boca del sobre: borde superior de la parte delantera, medido en el fotograma, ordenado por x. */
+export const BOCA: readonly Punto[] = [
+  { x: 350, y: 308 },
+  { x: 429, y: 324 },
+  { x: 531, y: 399 },
+  { x: 737, y: 399 },
+  { x: 802, y: 348 },
+  { x: 842, y: 322 },
+  { x: 918, y: 308 },
+]
+
+/** Y del punto más alto (menor y) de una línea de boca. */
+export const yMasAlta = (boca: readonly Punto[]) => Math.min(...boca.map((p) => p.y))
+
+/** Y del punto más bajo (mayor y) de una línea de boca. */
+export const yMasBaja = (boca: readonly Punto[]) => Math.max(...boca.map((p) => p.y))
 
 /** Tramo horizontal del papel dentro del sobre: la boca menos ≈30 px por lado. */
 export const PAPEL_EN_SOBRE = { x0: 380, x1: 888 } as const
@@ -104,21 +108,22 @@ export function cajaSobreEnVentana(escenario: Caja): Caja {
   }
 }
 
-/** Boca del sobre en píxeles de ventana. */
-export function bocaEnVentana(escenario: Caja): PuntosBoca {
-  return {
-    izquierda: aVentana(escenario, BOCA.izquierda),
-    derecha: aVentana(escenario, BOCA.derecha),
-    vertice: aVentana(escenario, BOCA.vertice),
-  }
+/** Y de ventana de una y del fotograma (misma escala que `bocaEnVentana`). */
+export function yEnVentana(escenario: Caja, yFotograma: number): number {
+  return escenario.top + yFotograma * (escenario.width / FOTOGRAMA.ancho)
 }
 
-/** Caja inicial del papel metido en el sobre: ancho de la boca menos los lados, borde superior a la altura de las esquinas. */
+/** Boca del sobre en píxeles de ventana. */
+export function bocaEnVentana(escenario: Caja): Punto[] {
+  return BOCA.map((p) => aVentana(escenario, p))
+}
+
+/** Caja inicial del papel metido en el sobre: ancho de la boca menos los lados, borde superior a la altura del punto más alto de la boca. */
 export function cajaPapelEnSobre(escenario: Caja): Pick<Caja, 'left' | 'top' | 'width'> {
   const escala = escenario.width / FOTOGRAMA.ancho
   return {
     left: escenario.left + PAPEL_EN_SOBRE.x0 * escala,
-    top: escenario.top + BOCA.izquierda.y * escala,
+    top: escenario.top + yMasAlta(BOCA) * escala,
     width: (PAPEL_EN_SOBRE.x1 - PAPEL_EN_SOBRE.x0) * escala,
   }
 }
@@ -140,21 +145,21 @@ export function transformDesde(
 }
 
 /**
- * `clip-path` de 7 puntos que deja ver lo que está sobre la V de la boca (`abierta = false`) o todo (`true`,
- * V y laterales al alto de la ventana). Siempre 7 puntos para poder interpolar entre los dos.
+ * `clip-path` que deja ver lo que está por encima de la línea de la boca (`abierta = false`) o todo (`true`,
+ * todos los puntos de la línea al alto de la ventana). Siempre N + 4 puntos para poder interpolar entre los dos.
+ * Recorrido: 0,0 → 100%,0 → 100%,y del último → puntos de derecha a izquierda → 0,y del primero.
  */
-export function poligonoBoca(boca: PuntosBoca, abierta: boolean, altoVentana: number): string {
-  const yLado = abierta ? altoVentana : boca.izquierda.y
-  const yVertice = abierta ? altoVentana : boca.vertice.y
-  const yEsquinaDer = abierta ? altoVentana : boca.derecha.y
+export function poligonoBoca(boca: readonly Punto[], abierta: boolean, altoVentana: number): string {
+  const alto = (p: Punto) => (abierta ? altoVentana : p.y)
+  const primero = boca[0]
+  const ultimo = boca[boca.length - 1]
+  if (!primero || !ultimo) return 'polygon(0px 0px, 100% 0px, 100% 0px)'
   const puntos = [
     '0px 0px',
     '100% 0px',
-    `100% ${yLado}px`,
-    `${boca.derecha.x}px ${yEsquinaDer}px`,
-    `${boca.vertice.x}px ${yVertice}px`,
-    `${boca.izquierda.x}px ${abierta ? altoVentana : boca.izquierda.y}px`,
-    `0px ${yLado}px`,
+    `100% ${alto(ultimo)}px`,
+    ...[...boca].reverse().map((p) => `${p.x}px ${alto(p)}px`),
+    `0px ${alto(primero)}px`,
   ]
   return `polygon(${puntos.join(', ')})`
 }

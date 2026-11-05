@@ -1,0 +1,34 @@
+/*
+ * Papel decorativo de la apertura (02g). `.boca` ocupa la ventana y recorta (clip-path) al papel por la línea de la boca del sobre;
+ * `.papel-apertura` se coloca con JS en la caja final de `#carta` y se mueve con transform. Detrás de la parte delantera del sobre (recorte) mientras sube; al llegar arriba pierde el recorte y baja por delante. Solo existe entre
+ * el momento en que el sobre queda quieto (data-fase) y el relevo con la carta real.
+ */
+.boca,
+.papel-apertura {
+  display: none;
+}
+
+.boca {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.papel-apertura {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+  /* Sombra, papel y bordes irregulares: las reglas compartidas con `.carta` están en carta.css (al relevar no hay salto); #boca los recorta bajo la línea de la boca mientras está detrás del sobre */
+}
+
+body[data-fase='papel-sube'] .boca,
+body[data-fase='papel-sube'] .papel-apertura {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-estado] .boca {
+    display: none;
+  }
+}

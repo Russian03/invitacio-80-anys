@@ -1,18 +1,65 @@
-.carta {
-  /* Como mucho el papel del último fotograma: 0,8266 × 16/9 × alto = 146,94dvh (D19, T18d), pero nunca menos del
-     ancho mínimo (D23); en ventanas estrechas manda el ancho menos los márgenes (sin scroll horizontal) */
-  width: min(calc(100% - 2 * var(--esp-4)), max(146.94dvh, var(--ancho-minimo-papel)));
-  margin-inline: auto;
-  padding: var(--esp-5);
+:root {
+  /*
+   * Sombra de papel apilada (la usan la carta y la hoja decorativa de la apertura, para que el relevo no cambie nada):
+   * se desplaza a la derecha y hacia abajo, con desenfoque creciente y opacidades bajas.
+   */
+  --sombra-papel:
+    0 1px 1px rgb(0 0 0 / 0.14), 2px 3px 4px rgb(0 0 0 / 0.14), 5px 8px 10px rgb(0 0 0 / 0.13),
+    10px 16px 22px rgb(0 0 0 / 0.14), 18px 30px 44px rgb(0 0 0 / 0.16);
+  /* Tiras de relieve de los laterales (D37): 4 px de ancho, repetidas en vertical cada 512 px (el borde se come de 0,4 a 2 px) */
+  --borde-papel-ancho: 4px;
+  --borde-papel-alto: 512px;
+}
+
+/*
+ * Hoja de papel, común a la carta real y a la hoja decorativa de la apertura (no pueden diferir ni un píxel).
+ * Va en pseudoelementos detrás del contenido: `::after` es el papel con su máscara (dos tiras laterales con el borde
+ * irregular, papel de trapo, relieve pequeñísimo y uniforme de arriba abajo, y un relleno liso en medio) y `::before`
+ * es la sombra. La sombra es un box-shadow de un rectángulo metido 2 px por los lados (lo que más se come el relieve),
+ * no un `filter: drop-shadow`: sigue el contorno al píxel que importa y no obliga a repintar un desenfoque por
+ * cuadro en una hoja muy alta que además cambia de alto durante la apertura.
+ */
+.carta::before,
+.carta::after,
+.papel-apertura::before,
+.papel-apertura::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.carta::before,
+.papel-apertura::before {
+  inset-inline: calc(var(--borde-papel-ancho) / 2);
+  box-shadow: var(--sombra-papel);
+}
+
+.carta::after,
+.papel-apertura::after {
   /* Papel del último fotograma del vídeo (D18): baja con el scroll, el pliegue se repite */
   background-color: var(--color-papel);
   background-image: url('/img/papel.webp');
   background-size: 100% auto;
   background-repeat: repeat-y;
   background-position: top center;
+  -webkit-mask-image: url('/img/borde-papel-izq.png'), url('/img/borde-papel-der.png'), linear-gradient(#000, #000);
+  -webkit-mask-size: var(--borde-papel-ancho) var(--borde-papel-alto), var(--borde-papel-ancho) var(--borde-papel-alto), calc(100% - 2 * var(--borde-papel-ancho)) 100%;
+  -webkit-mask-position: left top, right top, var(--borde-papel-ancho) 0;
+  -webkit-mask-repeat: repeat-y, repeat-y, no-repeat;
+  mask-image: url('/img/borde-papel-izq.png'), url('/img/borde-papel-der.png'), linear-gradient(#000, #000);
+  mask-size: var(--borde-papel-ancho) var(--borde-papel-alto), var(--borde-papel-ancho) var(--borde-papel-alto), calc(100% - 2 * var(--borde-papel-ancho)) 100%;
+  mask-position: left top, right top, var(--borde-papel-ancho) 0;
+  mask-repeat: repeat-y, repeat-y, no-repeat;
+}
+
+.carta {
+  width: min(calc(100% - 2 * var(--esp-4)), var(--ancho-papel));
+  margin-inline: auto;
+  padding: var(--esp-5);
   color: var(--color-texto);
   overflow-wrap: anywhere;
-  /* Por encima del escenario mientras la escena se retira tras el fundido */
+  /* Por encima del escenario mientras la escena se retira tras el fundido; crea el contexto donde va el ::before */
   position: relative;
   z-index: 2;
 }

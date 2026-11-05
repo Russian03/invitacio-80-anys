@@ -1,6 +1,6 @@
 :root {
-  /* Azul medido en el último fotograma del vídeo (rgb 20, 70, 118 en el PNG; #164878 = rgb 22, 72, 120 medido en el vídeo reproducido, H.264 desplaza el tono) */
-  --color-mesa: #164878;
+  /* Color de respaldo de la mesa (D36): el tono medio muestreado de public/img/fondo-escena.webp (rgb 29,35,55, media de la imagen), el fondo permanente de la página; se ve si la imagen no carga y mientras llega */
+  --color-mesa: #1d2337;
   --color-papel: #f3eee1;
   --color-texto: #12388f;
   --color-texto-sec: #3d4f7c;
@@ -31,16 +31,14 @@
 
   --radio-control: 6px;
   --margen-mesa: var(--esp-7);
-  --ancho-minimo-papel: 600px;
+  /* Ancho final del papel en ordenador (D32); en ventanas estrechas manda el ancho menos los márgenes */
+  --ancho-papel: 760px;
 
   /* Escenario del sobre (D30): = CENTRO_SOBRE, LIMITE_ANCHO_VW y LIMITE_ALTO_DVH de src/carta/geometria.ts; un test e2e lo comprueba */
   --sobre-centro-x: 0.495;
   --sobre-centro-y: 0.441;
   --escenario-max-ancho: 206.3vw;
   --escenario-max-alto: 225.3dvh;
-  /* Degradado de escena: imita el fondo del vídeo (rgb medidos en el último fotograma) */
-  --escena-claro: rgb(49 56 81);
-  --escena-oscuro: rgb(19 22 40);
 
   /* Tokens de movimiento (diseno.md → Movimiento) */
   --dur-rapida: 150ms;
@@ -57,9 +55,13 @@
   }
 }
 
-/* El hueco de la barra de scroll no cambia al quitar el bloqueo: el papel no se mueve (T18b) */
-html {
-  scrollbar-gutter: stable;
+/*
+ * El scroll vertical no es el de la página sino el de `.mesa`, un contenedor fijo a ventana completa: así la barra se
+ * dibuja SOBRE `.fondo-escena` (fijo, detrás y fuera del contenedor) y nunca hay una franja de color distinto, sea cual sea el tamaño de la ventana.
+ */
+html,
+body {
+  overflow: hidden;
 }
 
 *,
@@ -77,14 +79,27 @@ body {
   background-color: var(--color-mesa);
 }
 
-/* Mientras la carta no está abierta no se puede bajar (D5) */
-body[data-estado='cerrada'],
-body[data-estado='abriendo'] {
-  overflow: hidden;
+/*
+ * Contenedor del scroll (D5, D36): barra fina y translúcida con la pista transparente. `stable both-edges` reserva el mismo
+ * hueco a ambos lados, transparente (se ve el fondo), así que al aparecer la barra la carta no se mueve ni cambia de ancho.
+ * Con barras superpuestas (móvil) no reserva nada. `100dvh` no hace falta: `fixed` + `inset: 0` sigue a la ventana visible.
+ */
+.mesa {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-block: var(--margen-mesa);
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.28) transparent;
 }
 
-.mesa {
-  padding-block: var(--margen-mesa);
+/* Mientras la carta no está abierta no se puede bajar (D5) */
+body[data-estado='cerrada'] .mesa,
+body[data-estado='abriendo'] .mesa {
+  overflow-y: hidden;
 }
 
 :focus-visible {

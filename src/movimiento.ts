@@ -18,3 +18,7 @@ export function conTope(promesa: Promise<unknown>, ms: number): Promise<void> {
 export function prefiereMovimientoReducido(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
+
+/** Curva de salida de los tokens CSS (`--ease-salida`); WAAPI no lee variables CSS. */
+export const EASE_SALIDA = 'cubic-bezier(0.22, 1, 0.36, 1)'
+export const EASE_ENTRADA_SALIDA = 'cubic-bezier(0.65, 0, 0.35, 1)'

@@ -6,6 +6,7 @@ import {
   prefiereMovimientoReducido,
 } from '../movimiento'
 import { ESTADO_INICIAL, contenidoInerte, transicion, type EventoCarta } from './estado-carta'
+import { animarPapel } from './papel'
 import {
   IMAGEN_SOBRE,
   SOBRE_QUIETO_S,
@@ -24,8 +25,8 @@ function terminadas(raiz: Element): Promise<unknown> {
 
 /**
  * Lleva la carta de cerrada a abierta: el estado vive en `data-estado` del body.
- * Se reproduce el vídeo del sobre y, al quedar quieto (SOBRE_QUIETO_S), una imagen fija ocupa su sitio y la
- * carta aparece con un fundido; con movimiento reducido o si el vídeo falla, solo el fundido. Si falta algún
+ * Se reproduce el vídeo del sobre y, al quedar quieto (SOBRE_QUIETO_S), una imagen fija ocupa su sitio, un papel
+ * decorativo sale por la boca y crece hasta la caja de la carta, y la carta real lo releva con un fundido; con movimiento reducido o si el vídeo falla, solo el fundido. Si falta algún
  * elemento, no toca nada y la carta queda visible.
  */
 export function iniciarCarta(body: HTMLElement): void {
@@ -33,12 +34,16 @@ export function iniciarCarta(body: HTMLElement): void {
   const titulo = body.querySelector<HTMLElement>('#titol')
   const video = body.querySelector<HTMLVideoElement>('#video-apertura')
   const imagen = body.querySelector<HTMLImageElement>('#sobre-abierto')
-  if (!carta || !titulo || !video || !imagen) return
+  const boca = body.querySelector<HTMLElement>('#boca')
+  const papel = body.querySelector<HTMLElement>('#papel-apertura')
+  const escenario = body.querySelector<HTMLElement>('#escenario')
+  if (!carta || !titulo || !video || !imagen || !boca || !papel || !escenario) return
 
   history.scrollRestoration = 'manual'
-  window.scrollTo(0, 0)
+  body.querySelector<HTMLElement>('#mesa')?.scrollTo(0, 0)
 
   let estado = ESTADO_INICIAL
+  let cancelarPapel: (() => void) | undefined
   const aplicar = () => {
     body.dataset.estado = estado
     carta.inert = contenidoInerte(estado)
@@ -55,12 +60,18 @@ export function iniciarCarta(body: HTMLElement): void {
     // Con movimiento reducido o sin vídeo, el fundido lo hace el CSS
     if (evento === 'fallo' || body.dataset.fase !== undefined) {
       const fundido = carta.animate([{ opacity: 0 }, { opacity: 1 }], { duration: DURACION_FUNDIDO_MS, easing: 'ease-out' })
-      // La escena (imagen fija y fondo) se retira cuando la carta ya la tapa
-      void conTope(fundido.finished, DURACION_FUNDIDO_MS * 3).then(() => delete body.dataset.fase)
+      // La escena (imagen fija y vídeo) se retira cuando la carta ya la tapa
+      void conTope(fundido.finished, DURACION_FUNDIDO_MS * 3).then(() => {
+        cancelarPapel?.()
+        delete body.dataset.fase
+      })
     }
   }
 
+  // Al soltar el vídeo, `play()` rechaza con AbortError: eso no es un fallo
+  let videoSoltado = false
   const soltarVideo = () => {
+    videoSoltado = true
     video.pause()
     video.removeAttribute('src')
     video.load()
@@ -68,6 +79,7 @@ export function iniciarCarta(body: HTMLElement): void {
 
   // Estado seguro: carta abierta con fundido y descarga del vídeo soltada (D10, D14). Llamarla dos veces es inocuo
   const fallar = () => {
+    cancelarPapel?.()
     pasar('fallo')
     soltarVideo()
   }
@@ -95,7 +107,9 @@ export function iniciarCarta(body: HTMLElement): void {
     ])
     video.src = VIDEO_APERTURA
     pasar('abrir')
-    video.play().catch(fallar)
+    video.play().catch(() => {
+      if (!videoSoltado) fallar()
+    })
     if (!(await arranque)) return fallar()
     const quieto = await esperarMomentoVideo(video, SOBRE_QUIETO_S, topeFin(video.duration))
     if (estado !== 'abriendo') return
@@ -103,6 +117,10 @@ export function iniciarCarta(body: HTMLElement): void {
     // Sobre quieto: imagen fija en lugar del vídeo, que se suelta para que no decodifique en vano
     body.dataset.fase = 'papel-sube'
     soltarVideo()
+    // El papel sube y crece; si no se puede animar o se cancela, fundido (D10, D34)
+    const papelAnimado = animarPapel({ body, carta, boca, papel, escenario })
+    cancelarPapel = papelAnimado.cancelar
+    if (!(await papelAnimado.terminada) || estado !== 'abriendo') return fallar()
     pasar('fin-animacion')
   }
 

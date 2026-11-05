@@ -52,6 +52,74 @@ async function esperarFundidoAlAbrir(page: Page) {
   expect(animaciones?.some((a) => a.duracionMs === 300 && a.propiedades.join() === 'opacity')).toBe(true)
 }
 
+/** Registra, al cambiar `data-fase` y al abrirse la carta, las animaciones de las capas y las cajas del relevo. */
+async function capturarFases(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __fases: Record<string, unknown> }
+    w.__fases = {}
+    const caja = (e: Element) => {
+      const c = e.getBoundingClientRect()
+      // El papel y el relieve de los bordes viven en el ::after; la sombra, en el ::before
+      const hoja = getComputedStyle(e, '::after')
+      return {
+        left: c.left,
+        top: c.top,
+        width: c.width,
+        fondo: [hoja.backgroundImage, hoja.backgroundSize],
+        sombra: getComputedStyle(e, '::before').boxShadow,
+        mascara: [hoja.maskImage || hoja.getPropertyValue('-webkit-mask-image'), hoja.maskSize || hoja.getPropertyValue('-webkit-mask-size'), hoja.maskPosition || hoja.getPropertyValue('-webkit-mask-position')],
+      }
+    }
+    new MutationObserver((registros) => {
+      const body = document.body
+      for (const registro of registros) {
+        if (registro.attributeName === 'data-fase') {
+          const fase = body.getAttribute('data-fase')
+          if (!fase || w.__fases[fase]) continue
+          const animaciones = document.getAnimations().map((animacion) => {
+            const efecto = animacion.effect as KeyframeEffect
+            return {
+              id: (efecto.target as Element).id,
+              duracionMs: Number(efecto.getComputedTiming().duration),
+              propiedades: [...new Set(efecto.getKeyframes().flatMap((f) => Object.keys(f)))].filter(
+                (k) => !['offset', 'computedOffset', 'easing', 'composite'].includes(k),
+              ),
+            }
+          })
+          w.__fases[fase] = {
+            animaciones,
+            papel: animaciones.filter((a) => a.id === 'papel-apertura').map(({ duracionMs, propiedades }) => ({ duracionMs, propiedades })),
+            keyframesPapel: document
+              .getAnimations()
+              .filter((animacion) => (animacion.effect as KeyframeEffect).target?.id === 'papel-apertura')
+              .flatMap((animacion) => (animacion.effect as KeyframeEffect).getKeyframes().map((f) => ({ offset: f.computedOffset, easing: f.easing }))),
+            clip: getComputedStyle(document.querySelector('#boca')!).clipPath,
+          }
+        } else if (registro.attributeName === 'data-estado' && body.getAttribute('data-estado') === 'abierta' && !w.__fases.relevo) {
+          w.__fases.relevo = {
+            papel: caja(document.querySelector('#papel-apertura')!),
+            carta: caja(document.querySelector('#carta')!),
+            opacidadEscena: {
+              fondo: getComputedStyle(document.querySelector('#fondo-escena')!).opacity,
+              escenario: getComputedStyle(document.querySelector('#escenario')!).opacity,
+            },
+            fondoBg: getComputedStyle(document.querySelector('#fondo-escena')!).backgroundImage,
+          }
+        }
+      }
+    }).observe(document, { attributes: true, attributeFilter: ['data-fase', 'data-estado'], subtree: true })
+  })
+}
+
+type Caja = { left: number; top: number; width: number; fondo: string[]; sombra: string; mascara: string[] }
+type Fases = Record<'papel-sube', { animaciones: { id: string; duracionMs: number; propiedades: string[] }[]; papel: { duracionMs: number; propiedades: string[] }[]; keyframesPapel: { offset: number; easing: string }[]; clip: string }> & {
+  relevo: { papel: Caja; carta: Caja; opacidadEscena: { fondo: string; escenario: string }; fondoBg: string }
+}
+
+async function leerFases(page: Page): Promise<Fases> {
+  return page.evaluate(() => (window as unknown as { __fases: Fases }).__fases)
+}
+
 /** Ventana apaisada (16:9) para los tests del vídeo. */
 const VENTANA_CON_VIDEO = { width: 1600, height: 900 }
 
@@ -139,26 +207,247 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta')
     await esperarFundidoAlAbrir(page)
     await expect(page.locator('#escenario')).toBeHidden()
-    await expect(page.locator('#fondo-escena')).toBeHidden()
+    await expect(page.locator('#fondo-escena')).toBeVisible()
     await expect(page.locator('body')).not.toHaveAttribute('data-fase', /.*/)
     const medidas = await page.evaluate(() => ({
-      scrollY: window.scrollY,
+      scrollY: document.querySelector('#mesa')!.scrollTop,
       top: document.querySelector('#carta')!.getBoundingClientRect().top,
     }))
     expect(medidas.scrollY).toBe(0)
     expect(medidas.top).toBeGreaterThanOrEqual(40)
   })
 
-  test('mientras se abre hay un fondo de escena en degradado y el escenario tiene los bordes difuminados', async ({ page }) => {
+  test('el papel no existe a la vista mientras gira la solapa (antes de 1,4 s)', async ({ page }) => {
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.39)
+    await expect(page.locator('#boca')).toBeHidden()
+    await expect(page.locator('#papel-apertura')).toBeHidden()
+  })
+
+  test('una sola línea temporal: el papel (transform y alto de la hoja), el recorte (clipPath) y la escena (opacity) comparten duración; el recorte es un polígono de 11 puntos', async ({ page }) => {
+    await capturarFases(page)
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 6000 })
+    const sube = (await leerFases(page))['papel-sube']
+    const de = (id: string) => sube.animaciones.filter((a) => a.id === id)
+    const total = sube.papel[0]!.duracionMs
+    expect(total).toBeGreaterThanOrEqual(800)
+    expect(sube.papel.map((a) => ({ ...a, propiedades: [...a.propiedades].sort() }))).toEqual([{ duracionMs: total, propiedades: ['height', 'transform'] }])
+    expect(de('boca')).toEqual([{ id: 'boca', duracionMs: total, propiedades: ['clipPath'] }])
+    // El fondo de escena es permanente (D36): no se anima
+    expect(de('fondo-escena')).toEqual([])
+    expect(de('escenario')).toEqual([{ id: 'escenario', duracionMs: total, propiedades: ['opacity'] }])
+    expect(sube.clip).toMatch(/^polygon\(/)
+    expect(sube.clip.split(',')).toHaveLength(11)
+  })
+
+  test('mismo ritmo: subida y bajada con la misma curva simétrica y duraciones proporcionales a la distancia (ambas ≥ 400 ms, total ≲ 2,2 s)', async ({ page }) => {
+    await capturarFases(page)
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 6000 })
+    const fase = (await leerFases(page))['papel-sube']
+    const keyframes = fase.keyframesPapel
+    const total = fase.papel[0]!.duracionMs
+    const offsets = keyframes.map((k) => k.offset)
+    expect(offsets[0]).toBe(0)
+    expect(offsets[2]).toBe(1)
+    const sube = offsets[1]! * total
+    const baja = total - sube
+    expect(sube).toBeGreaterThanOrEqual(399)
+    expect(baja).toBeGreaterThanOrEqual(399)
+    expect(keyframes[0]?.easing).toBe('cubic-bezier(0.45, 0.05, 0.55, 0.95)')
+    // la bajada también frena al colocarse: misma curva ease-out al final en el tramo de bajada
+    expect(keyframes[1]?.easing).toBe(keyframes[0]?.easing)
+    expect(total).toBeLessThanOrEqual(2300)
+  })
+
+  test('giro: el borde superior de la hoja queda por encima del viewport y el inferior en la y 324 del fotograma (mapeada a la ventana)', async ({ page }) => {
+    await capturarFases(page)
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-fase', 'papel-sube')
+    const cerrado = (await leerFases(page))['papel-sube'].clip
+    const alFrente = await page.waitForFunction(
+      (c) => {
+        if (getComputedStyle(document.querySelector('#boca')!).clipPath === c) return null
+        const r = document.querySelector('#papel-apertura')!.getBoundingClientRect()
+        return { top: r.top, bottom: r.bottom, ancho: innerWidth, alto: innerHeight }
+      },
+      cerrado,
+      { timeout: 5000, polling: 'raf' },
+    )
+    const m = (await alFrente.jsonValue()) as { top: number; bottom: number; ancho: number; alto: number }
+    const esc = cajaEscenario(m.ancho, m.alto)!
+    expect(m.top).toBeLessThanOrEqual(10)
+    expect(Math.abs(m.bottom - (esc.top + 324 * (esc.width / 1280)))).toBeLessThanOrEqual(12)
+  })
+
+  test('el sobre y la escena se quedan detrás sin desvanecerse mientras el papel sube; el recorte se quita arriba del todo y el escenario se funde al final y el fondo permanece', async ({ page }) => {
+    await capturarFases(page)
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-fase', 'papel-sube')
+    const cerrado = (await leerFases(page))['papel-sube'].clip
+    // Subiendo: recorte cerrado y escena entera
+    await page.waitForTimeout(400)
+    const subiendo = await page.evaluate(() => ({
+      clip: getComputedStyle(document.querySelector('#boca')!).clipPath,
+      escenario: getComputedStyle(document.querySelector('#escenario')!).opacity,
+      fondo: getComputedStyle(document.querySelector('#fondo-escena')!).opacity,
+      imagen: getComputedStyle(document.querySelector('#sobre-abierto')!).visibility,
+    }))
+    expect(subiendo).toEqual({ clip: cerrado, escenario: '1', fondo: '1', imagen: 'visible' })
+    // Al pasar al frente (arriba del todo) la escena sigue entera: aún no ha empezado a fundirse
+    const alFrente = await page.waitForFunction(
+      (c) => {
+        const clip = getComputedStyle(document.querySelector('#boca')!).clipPath
+        return clip !== c ? { escenario: getComputedStyle(document.querySelector('#escenario')!).opacity, fondo: getComputedStyle(document.querySelector('#fondo-escena')!).opacity } : null
+      },
+      cerrado,
+      { timeout: 4000 },
+    )
+    const opacidades = (await alFrente.jsonValue()) as { escenario: string; fondo: string }
+    expect(Number(opacidades.escenario)).toBeGreaterThan(0.95)
+    expect(Number(opacidades.fondo)).toBeGreaterThan(0.95)
+    // Al final, solo queda el fondo permanente (D36)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 6000 })
+    await expect(page.locator('#escenario')).toHaveCSS('opacity', '0')
+    await expect(page.locator('#fondo-escena')).toHaveCSS('opacity', '1')
+  })
+
+  test('si se cancela el papel a mitad, la escena y las capas quedan ocultas al instante (sin parpadeo) y la carta se abre', async ({ page }) => {
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-fase', 'papel-sube')
+    await page.waitForTimeout(300)
+    await page.evaluate(() => document.getAnimations().find((a) => (a.effect as KeyframeEffect).target?.id === 'papel-apertura')!.cancel())
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3000 })
+    await expect(page.locator('#escenario')).toHaveCSS('opacity', '0')
+    await expect(page.locator('#fondo-escena')).toBeVisible()
+    await expect(page.locator('#papel-apertura')).toBeHidden()
+    await expect(page.locator('#boca')).toBeHidden()
+  })
+
+  for (const tam of [
+    { width: 1920, height: 1080 },
+    { width: 1024, height: 768 },
+    { width: 800, height: 360 },
+    { width: 412, height: 915 },
+    { width: 360, height: 640 },
+  ]) {
+    test(`con ${tam.width}x${tam.height} el relevo es sin salto: el papel decorativo y #carta coinciden`, async ({ page }) => {
+      await page.setViewportSize(tam)
+      await capturarFases(page)
+      await arrancarVideo(page)
+      const poner = await simularVideo(page)
+      await poner(1.4)
+      await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 5000 })
+      const relevo = (await leerFases(page)).relevo
+      for (const clave of ['left', 'top', 'width'] as const) {
+        expect(Math.abs(relevo.papel[clave] - relevo.carta[clave])).toBeLessThanOrEqual(1)
+      }
+      expect(relevo.papel.fondo).toEqual(relevo.carta.fondo)
+      // Sombra multicapa de papel, igual en la hoja y en la carta real: el relevo no cambia nada visible
+      expect(relevo.papel.sombra).not.toBe('none')
+      expect(relevo.papel.sombra.match(/rgba?\(/g)!.length).toBeGreaterThanOrEqual(4)
+      expect(relevo.papel.sombra).toBe(relevo.carta.sombra)
+      // Bordes de papel de trapo: mismas tiras de máscara en la hoja y en la carta (D37)
+      expect(relevo.papel.mascara[0]).toContain('borde-papel-izq')
+      expect(relevo.papel.mascara[0]).toContain('borde-papel-der')
+      expect(relevo.papel.mascara).toEqual(relevo.carta.mascara)
+      // El escenario se ha fundido; el fondo de escena sigue entero (D36)
+      expect(relevo.opacidadEscena).toEqual({ fondo: '1', escenario: '0' })
+      expect(relevo.fondoBg).toContain('fondo-escena')
+    })
+  }
+
+  test('tras el relevo: arriba del todo, foco en el título, capas fuera, fondo permanente y sin scroll horizontal', async ({ page }) => {
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 5000 })
+    await expect(page.locator('#titol')).toBeFocused()
+    await expect(page.locator('body')).not.toHaveAttribute('data-fase', /.*/, { timeout: 3000 })
+    for (const capa of ['#boca', '#papel-apertura', '#escenario']) await expect(page.locator(capa)).toBeHidden()
+    await expect(page.locator('#fondo-escena')).toBeVisible()
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(29, 35, 55)')
+    const medidas = await page.evaluate(() => ({
+      scrollY: document.querySelector('#mesa')!.scrollTop,
+      top: document.querySelector('#carta')!.getBoundingClientRect().top,
+      margen: parseFloat(getComputedStyle(document.querySelector('.mesa')!).paddingTop),
+      sinScroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    }))
+    expect(medidas.scrollY).toBe(0)
+    expect(Math.abs(medidas.top - medidas.margen)).toBeLessThanOrEqual(1)
+    expect(medidas.sinScroll).toBe(true)
+  })
+
+  test('si falla la animación del papel, la carta aparece con un fundido (D10, D34)', async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = Element.prototype.animate
+      Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
+        if (this.id === 'papel-apertura') throw new Error('fallo en el papel')
+        return original.apply(this, args)
+      }
+    })
+    await capturarFundidoAlAbrir(page)
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3000 })
+    await esperarFundidoAlAbrir(page)
+    await expect(page.locator('#titol')).toBeFocused()
+    await expect(page.locator('#escenario')).toBeHidden({ timeout: 3000 })
+    await expect(page.locator('#boca')).toBeHidden()
+  })
+
+  test('el fondo de escena es la imagen del exterior del sobre, con el color de la mesa de respaldo, y el escenario tiene los bordes difuminados (D36)', async ({ page }) => {
     await arrancarVideo(page)
     const fondo = page.locator('#fondo-escena')
     await expect(fondo).toBeVisible()
-    expect(await fondo.evaluate((f) => getComputedStyle(f).backgroundImage)).toContain('linear-gradient')
+    const estilo = await fondo.evaluate((f) => {
+      const e = getComputedStyle(f)
+      const antes = getComputedStyle(f, '::before')
+      return { imagen: e.backgroundImage, color: e.backgroundColor, posicion: e.position, imagenAntes: antes.backgroundImage }
+    })
+    expect(estilo.imagen).toContain('/img/fondo-escena.webp')
+    expect(estilo.imagenAntes).toContain('/img/fondo-escena.webp')
+    expect(estilo.color).toBe('rgb(29, 35, 55)')
+    expect(estilo.posicion).toBe('fixed')
     const mascara = await page.locator('#escenario').evaluate((e) => {
       const estilo = getComputedStyle(e)
       return estilo.maskImage || estilo.getPropertyValue('-webkit-mask-image')
     })
     expect(mascara).toContain('linear-gradient')
+  })
+
+  test('el fondo de escena se queda fixed detrás de la carta y del scroll tras la apertura (D36)', async ({ page }) => {
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 5000 })
+    await expect(page.locator('body')).not.toHaveAttribute('data-fase', /.*/, { timeout: 3000 })
+    const fondo = page.locator('#fondo-escena')
+    await expect(fondo).toBeVisible()
+    await expect(fondo).toHaveCSS('opacity', '1')
+    await page.evaluate(() => document.querySelector('#mesa')!.scrollTo(0, 400))
+    const caja = await fondo.evaluate((f) => {
+      const c = f.getBoundingClientRect()
+      return { top: c.top, left: c.left, ancho: c.width, alto: c.height, anchoV: innerWidth, altoV: innerHeight, z: getComputedStyle(f).zIndex }
+    })
+    expect(caja.top).toBe(0)
+    expect(caja.left).toBe(0)
+    expect(caja.ancho).toBeGreaterThanOrEqual(caja.anchoV - 20)
+    expect(caja.alto).toBe(caja.altoV)
+    expect(Number(caja.z)).toBeLessThan(2)
   })
 
   // El escenario es 16:9, cubre la ventana mientras el sobre quepa con aire y, si no, lo limita al 92 %
@@ -283,9 +572,10 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('#escenario')).toBeHidden()
   })
 
-  test('el scroll vertical reserva su hueco para no mover el papel al terminar el vídeo', async ({ page }) => {
+  test('el scroll vertical es el de #mesa y reserva su hueco a ambos lados para no mover el papel al terminar el vídeo', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('html')).toHaveCSS('scrollbar-gutter', /stable/)
+    await expect(page.locator('#mesa')).toHaveCSS('scrollbar-gutter', /stable/)
+    await expect(page.locator('html')).toHaveCSS('overflow-y', 'hidden')
   })
 
   test('si el vídeo no arranca en 4 s, la carta aparece con un fundido', async ({ page }) => {
@@ -365,10 +655,10 @@ test.describe('con movimiento reducido', () => {
   test('al recargar vuelve a abrirse y empieza arriba', async ({ page }) => {
     await page.goto('/')
     await abrirCarta(page)
-    await page.evaluate(() => window.scrollTo(0, 2000))
+    await page.evaluate(() => document.querySelector('#mesa')!.scrollTo(0, 2000))
     await page.reload()
     await expect(page.locator('body')).not.toHaveAttribute('data-estado', 'abierta')
-    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    expect(await page.evaluate(() => document.querySelector('#mesa')!.scrollTop)).toBe(0)
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 5000 })
     const almacenados = await page.evaluate(() => localStorage.length + sessionStorage.length)
     expect(almacenados).toBe(0)

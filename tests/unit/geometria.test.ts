@@ -20,11 +20,17 @@ describe('constantes del fotograma', () => {
     expect(CAJA_SOBRE.y1).toBeLessThan(FOTOGRAMA.alto)
   })
 
-  it('la boca es una V: vértice por debajo de las esquinas y entre ellas', () => {
-    expect(BOCA.izquierda.y).toBe(BOCA.derecha.y)
-    expect(BOCA.vertice.y).toBeGreaterThan(BOCA.izquierda.y)
-    expect(BOCA.vertice.x).toBeGreaterThan(BOCA.izquierda.x)
-    expect(BOCA.vertice.x).toBeLessThan(BOCA.derecha.x)
+  it('la boca es la línea medida: 7 puntos ordenados por x, dentro del sobre, con la parte baja en el centro', () => {
+    expect(BOCA).toHaveLength(7)
+    expect(BOCA[0]).toEqual({ x: 350, y: 308 })
+    expect(BOCA[6]).toEqual({ x: 918, y: 308 })
+    for (let i = 1; i < BOCA.length; i++) expect(BOCA[i]!.x).toBeGreaterThan(BOCA[i - 1]!.x)
+    for (const p of BOCA) {
+      expect(p.x).toBeGreaterThanOrEqual(CAJA_SOBRE.x0)
+      expect(p.x).toBeLessThanOrEqual(CAJA_SOBRE.x1)
+    }
+    expect(Math.max(...BOCA.map((p) => p.y))).toBe(399)
+    expect(Math.min(...BOCA.map((p) => p.y))).toBe(308)
   })
 })
 
@@ -120,8 +126,7 @@ describe('bocaEnVentana', () => {
 
   it('escala x2 y desplaza', () => {
     const boca = bocaEnVentana({ left: 10, top: 20, width: 2560, height: 1440 })
-    expect(boca.vertice).toEqual({ x: 10 + BOCA.vertice.x * 2, y: 20 + BOCA.vertice.y * 2 })
-    expect(boca.izquierda).toEqual({ x: 10 + BOCA.izquierda.x * 2, y: 20 + BOCA.izquierda.y * 2 })
+    expect(boca).toEqual(BOCA.map((p) => ({ x: 10 + p.x * 2, y: 20 + p.y * 2 })))
   })
 })
 
@@ -129,9 +134,9 @@ describe('cajaPapelEnSobre', () => {
   it('queda dentro de la boca, con margen a los lados y bajo la V', () => {
     const escenario = { left: 0, top: 0, width: 1280, height: 720 }
     const papel = cajaPapelEnSobre(escenario)
-    expect(papel.left).toBeGreaterThan(BOCA.izquierda.x)
-    expect(papel.left + papel.width).toBeLessThan(BOCA.derecha.x)
-    expect(papel.top).toBeGreaterThanOrEqual(BOCA.izquierda.y)
+    expect(papel.left).toBeGreaterThan(BOCA[0]!.x)
+    expect(papel.left + papel.width).toBeLessThan(BOCA[BOCA.length - 1]!.x)
+    expect(papel.top).toBe(Math.min(...BOCA.map((p) => p.y)))
   })
 
   it('escala con el escenario', () => {
@@ -168,21 +173,27 @@ describe('transformDesde', () => {
 
 describe('poligonoBoca', () => {
   const cuenta = (css: string) => css.slice(css.indexOf('(') + 1, -1).split(',').length
+  const BOCA_PRUEBA = [
+    { x: 10, y: 20 },
+    { x: 30, y: 50 },
+    { x: 70, y: 40 },
+    { x: 90, y: 25 },
+  ]
 
-  it('cerrado y abierto tienen 7 puntos (interpolables)', () => {
-    expect(cuenta(poligonoBoca(BOCA, false, 900))).toBe(7)
-    expect(cuenta(poligonoBoca(BOCA, true, 900))).toBe(7)
+  it('cerrado y abierto tienen N + 4 puntos (interpolables)', () => {
+    expect(cuenta(poligonoBoca(BOCA, false, 900))).toBe(BOCA.length + 4)
+    expect(cuenta(poligonoBoca(BOCA, true, 900))).toBe(BOCA.length + 4)
   })
 
-  it('cerrado recorta por la V', () => {
-    expect(poligonoBoca({ izquierda: { x: 10, y: 20 }, derecha: { x: 90, y: 20 }, vertice: { x: 50, y: 60 } }, false, 100)).toBe(
-      'polygon(0px 0px, 100% 0px, 100% 20px, 90px 20px, 50px 60px, 10px 20px, 0px 20px)',
+  it('cerrado sigue la línea de izquierda a derecha, de derecha a izquierda, con los lados a la altura de los extremos', () => {
+    expect(poligonoBoca(BOCA_PRUEBA, false, 100)).toBe(
+      'polygon(0px 0px, 100% 0px, 100% 25px, 90px 25px, 70px 40px, 30px 50px, 10px 20px, 0px 20px)',
     )
   })
 
-  it('abierto lleva V y laterales al alto de la ventana', () => {
-    expect(poligonoBoca({ izquierda: { x: 10, y: 20 }, derecha: { x: 90, y: 20 }, vertice: { x: 50, y: 60 } }, true, 100)).toBe(
-      'polygon(0px 0px, 100% 0px, 100% 100px, 90px 100px, 50px 100px, 10px 100px, 0px 100px)',
+  it('abierto lleva todos los puntos al alto de la ventana', () => {
+    expect(poligonoBoca(BOCA_PRUEBA, true, 100)).toBe(
+      'polygon(0px 0px, 100% 0px, 100% 100px, 90px 100px, 70px 100px, 30px 100px, 10px 100px, 0px 100px)',
     )
   })
 })

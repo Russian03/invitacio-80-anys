@@ -1,7 +1,7 @@
 import { abrirCarta, expect, test } from './fixtures'
 
-// Ancho mínimo del papel (D23); `--ancho-minimo-papel` de base.css. Se revisa en 02g (T31)
-const ANCHO_MINIMO_PAPEL_PX = 600
+// Ancho final del papel en ordenador (D32); `--ancho-papel` de base.css
+const ANCHO_PAPEL_PX = 760
 
 
 // El vídeo de apertura no se reproduce en el Chromium de Playwright (D21)
@@ -11,7 +11,7 @@ test('muestra la mesa azul y la carta en catalán', async ({ page, isMobile }) =
   await page.goto('/')
   await abrirCarta(page)
   await expect(page.locator('html')).toHaveAttribute('lang', 'ca')
-  await expect(page.locator('body')).toHaveCSS('background-color', /rgb\(22, 72, 120\)/)
+  await expect(page.locator('body')).toHaveCSS('background-color', /rgb\(29, 35, 55\)/)
   await expect(page.getByText('VINE A CELEBRAR')).toBeVisible()
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'DATA' })).toBeVisible()
@@ -81,16 +81,70 @@ test('la mesa no lleva degradado (el vídeo ya se comprueba contra la mesa en ca
   await expect(page.locator('body')).toHaveCSS('background-image', 'none')
 })
 
-test('la carta lleva la textura del papel y se desplaza con el scroll', async ({ page, request }) => {
+test('la carta lleva la textura del papel (en su ::after) y se desplaza con el scroll', async ({ page, request }) => {
   await page.goto('/')
   await abrirCarta(page)
-  const carta = page.locator('#carta')
-  await expect(carta).toHaveCSS('background-repeat', /repeat-y/)
-  await expect(carta).toHaveCSS('background-attachment', 'scroll')
-  const imagen = await carta.evaluate((c) => getComputedStyle(c).backgroundImage)
-  expect(imagen).toContain('/img/')
-  const url = /url\("?([^")]+)"?\)/.exec(imagen)![1]!
+  const hoja = await page.locator('#carta').evaluate((c) => {
+    const e = getComputedStyle(c, '::after')
+    return { repeat: e.backgroundRepeat, attachment: e.backgroundAttachment, imagen: e.backgroundImage }
+  })
+  expect(hoja.repeat).toMatch(/repeat-y/)
+  expect(hoja.attachment).toBe('scroll')
+  expect(hoja.imagen).toContain('/img/')
+  const url = /url\("?([^")]+)"?\)/.exec(hoja.imagen)![1]!
   expect((await request.get(url)).status()).toBe(200)
+})
+
+test('los laterales de la carta son irregulares (papel de trapo): relieve de 1 a 3 px, uniforme de arriba abajo, con la sombra bajo la hoja (D37)', async ({ page, request }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  await abrirCarta(page)
+  const estilo = await page.locator('#carta').evaluate((c) => {
+    const e = getComputedStyle(c, '::after')
+    return { mascara: e.maskImage || e.getPropertyValue('-webkit-mask-image'), sombra: getComputedStyle(c, '::before').boxShadow, cuerpo: getComputedStyle(c).boxShadow }
+  })
+  expect(estilo.mascara).toContain('borde-papel-izq')
+  expect(estilo.mascara).toContain('borde-papel-der')
+  expect(estilo.sombra.match(/rgba?\(/g)!.length).toBeGreaterThanOrEqual(4)
+  expect(estilo.cuerpo).toBe('none')
+  for (const lado of ['izq', 'der']) expect((await request.get(`/img/borde-papel-${lado}.png`)).status()).toBe(200)
+  // Se mide en pantalla: cuánto papel hay en cada fila junto al borde (columnas de luminosidad alta)
+  const caja = await page.locator('#carta').evaluate((c) => {
+    const r = c.getBoundingClientRect()
+    return { left: r.left, right: r.right, top: r.top, dpr: devicePixelRatio }
+  })
+  const lector = await page.context().newPage()
+  for (const lado of ['izq', 'der'] as const) {
+    const x = lado === 'izq' ? caja.left - 4 : caja.right - 4
+    const imagen = await page.screenshot({ clip: { x, y: caja.top + 200, width: 8, height: 400 }, type: 'png' })
+    // La lectura de píxeles va en una página en blanco aparte: la CSP de la web (connect-src 'self') no deja leer data:
+    const cobertura = await lector.evaluate(async ([datos]) => {
+      const bitmap = await createImageBitmap(await (await fetch(datos!)).blob())
+      const lienzo = new OffscreenCanvas(bitmap.width, bitmap.height)
+      const g = lienzo.getContext('2d')!
+      g.drawImage(bitmap, 0, 0)
+      const { data, width, height } = g.getImageData(0, 0, bitmap.width, bitmap.height)
+      const filas: number[] = []
+      for (let fila = 0; fila < height; fila++) {
+        let suma = 0
+        for (let col = 0; col < width; col++) {
+          const i = (fila * width + col) * 4
+          suma += (data[i]! + data[i + 1]! + data[i + 2]!) / 3 > 150 ? 1 : 0
+        }
+        filas.push(suma)
+      }
+      return filas
+    }, ['data:image/png;base64,' + imagen.toString('base64')])
+    const visibles = cobertura.map((c) => c / caja.dpr)
+    const rango = Math.max(...visibles) - Math.min(...visibles)
+    expect(rango).toBeGreaterThanOrEqual(1)
+    expect(rango).toBeLessThanOrEqual(3.2)
+    // Uniforme: la primera y la segunda mitad tienen una irregularidad parecida
+    const mitad = visibles.length / 2
+    const rangoDe = (v: number[]) => Math.max(...v) - Math.min(...v)
+    expect(rangoDe(visibles.slice(0, mitad))).toBeGreaterThanOrEqual(1)
+    expect(rangoDe(visibles.slice(mitad))).toBeGreaterThanOrEqual(1)
+  }
 })
 
 test('la carta empieza con un margen azul arriba y acaba con otro abajo', async ({ page }) => {
@@ -99,25 +153,21 @@ test('la carta empieza con un margen azul arriba y acaba con otro abajo', async 
   const arriba = await page.locator('#carta').evaluate((c) => c.getBoundingClientRect().top)
   expect(arriba).toBeGreaterThanOrEqual(40)
   const abajo = await page.evaluate(() => {
-    window.scrollTo(0, document.documentElement.scrollHeight)
+    const mesa = document.querySelector('#mesa')!
+    mesa.scrollTo(0, mesa.scrollHeight)
     const caja = document.querySelector('#carta')!.getBoundingClientRect()
-    return document.documentElement.scrollHeight - (caja.bottom + window.scrollY)
+    return mesa.scrollHeight - (caja.bottom + mesa.scrollTop)
   })
   expect(abajo).toBeGreaterThanOrEqual(40)
 })
 
-test('en escritorio el papel ocupa el ancho del papel del vídeo', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'el ancho del papel del vídeo es solo de escritorio')
+test('en escritorio el papel mide el ancho final del papel (D32)', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'el ancho final es solo de escritorio')
   await page.setViewportSize({ width: 1920, height: 1080 })
   await page.goto('/')
   await abrirCarta(page)
-  const { ancho, esperado } = await page.locator('#carta').evaluate((c) => ({
-    ancho: c.getBoundingClientRect().width,
-    // 82,66 % del fotograma a alto completo (16:9): 0,8266 × 16/9 × alto, sin pasarse del ancho útil menos márgenes
-    esperado: Math.min(document.querySelector('.mesa')!.getBoundingClientRect().width - 32, 0.8266 * ((innerHeight * 16) / 9)),
-  }))
-  expect(Math.abs(ancho - esperado)).toBeLessThanOrEqual(2)
-  expect(Math.abs(ancho - 1587)).toBeLessThanOrEqual(2)
+  const ancho = await page.locator('#carta').evaluate((c) => c.getBoundingClientRect().width)
+  expect(Math.abs(ancho - ANCHO_PAPEL_PX)).toBeLessThanOrEqual(1)
   const columna = await page.locator('.carta-cabecera').evaluate((c) => c.getBoundingClientRect().width)
   expect(columna).toBeLessThanOrEqual(680)
 })
@@ -137,26 +187,16 @@ for (const tam of [
   })
 }
 
-test('con una ventana más cuadrada que el papel del vídeo, la carta no se pasa de los márgenes', async ({ page }) => {
-  await page.setViewportSize({ width: 1024, height: 768 })
-  await page.goto('/')
-  await abrirCarta(page)
-  const { ancho, util } = await page.locator('#carta').evaluate((c) => ({
-    ancho: c.getBoundingClientRect().width,
-    util: document.querySelector('.mesa')!.getBoundingClientRect().width,
-  }))
-  expect(Math.abs(ancho - (util - 32))).toBeLessThanOrEqual(1)
-})
-
-test.describe('ancho mínimo del papel (D23)', () => {
-  // Nunca baja de min(600, ancho útil − 32); el ancho útil depende del hueco del scroll, por eso se mide
+test.describe('ancho del papel (D32)', () => {
+  // Mide min(760, ancho útil − 32); el ancho útil (clientWidth de .mesa) descuenta el hueco simétrico de la barra, por eso se mide
   for (const tam of [
     { width: 1920, height: 360, tope: true },
-    { width: 1100, height: 300, tope: true },
-    { width: 600, height: 360, tope: false },
+    { width: 1024, height: 768, tope: true },
+    { width: 800, height: 600, tope: false },
     { width: 500, height: 360, tope: false },
+    { width: 360, height: 740, tope: false },
   ]) {
-    test(`a ${tam.width}x${tam.height} el papel mide min(${ANCHO_MINIMO_PAPEL_PX}, ancho − 32) y no hay scroll horizontal`, async ({
+    test(`a ${tam.width}x${tam.height} el papel mide min(${ANCHO_PAPEL_PX}, ancho − 32) y no hay scroll horizontal`, async ({
       page,
     }) => {
       await page.setViewportSize(tam)
@@ -164,12 +204,12 @@ test.describe('ancho mínimo del papel (D23)', () => {
       await abrirCarta(page)
       const medidas = await page.evaluate(() => ({
         ancho: document.querySelector('#carta')!.getBoundingClientRect().width,
-        util: document.querySelector('.mesa')!.getBoundingClientRect().width,
+        util: document.querySelector('.mesa')!.clientWidth,
         sinScroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
       }))
-      const esperado = Math.min(ANCHO_MINIMO_PAPEL_PX, medidas.util - 32)
+      const esperado = Math.min(ANCHO_PAPEL_PX, medidas.util - 32)
       expect(Math.abs(medidas.ancho - esperado)).toBeLessThanOrEqual(1)
-      if (tam.tope) expect(esperado).toBe(ANCHO_MINIMO_PAPEL_PX)
+      if (tam.tope) expect(esperado).toBe(ANCHO_PAPEL_PX)
       expect(medidas.sinScroll).toBe(true)
     })
   }
