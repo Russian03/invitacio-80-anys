@@ -11,6 +11,16 @@ test.describe('sin JavaScript', () => {
     await expect(page.locator('#carta')).not.toHaveAttribute('inert', /.*/)
   })
 
+  test('sin JavaScript todo lo marcado con data-entrada se ve', async ({ page }) => {
+    await page.goto('/')
+    const marcados = page.locator('[data-entrada]')
+    expect(await marcados.count()).toBe(5)
+    for (const elemento of await marcados.all()) {
+      await expect(elemento).toBeVisible()
+      await expect(elemento).toHaveCSS('opacity', '1')
+    }
+  })
+
   test('sin JavaScript no se ve ni se descarga el vídeo (S-11)', async ({ page }) => {
     const peticiones: string[] = []
     page.on('request', (peticion) => peticiones.push(peticion.url()))
@@ -50,6 +60,70 @@ async function esperarFundidoAlAbrir(page: Page) {
   )
   expect(animaciones?.length ?? 0).toBeGreaterThan(0)
   expect(animaciones?.some((a) => a.duracionMs === 300 && a.propiedades.join() === 'opacity')).toBe(true)
+}
+
+/** Al pasar a `abierta` registra las animaciones de `[data-entrada]` y de los bloques y pliegues sin `data-entrada`. */
+async function capturarEntrada(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __entrada?: unknown }
+    new MutationObserver(() => {
+      if (w.__entrada || document.body?.getAttribute('data-estado') !== 'abierta') return
+      const describir = (e: Element) =>
+        e.getAnimations().map((animacion) => {
+          const efecto = animacion.effect as KeyframeEffect
+          const t = efecto.getComputedTiming()
+          return {
+            duracionMs: Number(t.duration),
+            retrasoMs: Number(t.delay),
+            fin: Number(t.endTime),
+            relleno: t.fill,
+            propiedades: [...new Set(efecto.getKeyframes().flatMap((f) => Object.keys(f)))].filter(
+              (k) => !['offset', 'computedOffset', 'easing', 'composite'].includes(k),
+            ),
+          }
+        })
+      w.__entrada = {
+        entrada: [...document.querySelectorAll('[data-entrada]')].map((e) => ({
+          animaciones: describir(e),
+          opacidad: getComputedStyle(e).opacity,
+        })),
+        resto: [...document.querySelectorAll('#carta .pliegue, #carta .bloque:not([data-entrada]), #carta .linea-fina:not([data-entrada])')].map(
+          (e) => describir(e).length,
+        ),
+      }
+    }).observe(document, { attributes: true, attributeFilter: ['data-estado'], subtree: true })
+  })
+}
+
+type CapturaEntrada = {
+  entrada: { animaciones: { duracionMs: number; retrasoMs: number; fin: number; relleno: string; propiedades: string[] }[]; opacidad: string }[]
+  resto: number[]
+}
+
+async function leerEntrada(page: Page): Promise<CapturaEntrada> {
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __entrada?: unknown }).__entrada !== undefined)).toBe(true)
+  return page.evaluate(() => (window as unknown as { __entrada: CapturaEntrada }).__entrada)
+}
+
+/** Comprueba la entrada escalonada de lo inicial (D3). */
+function comprobarEntrada(captura: CapturaEntrada) {
+  expect(captura.entrada).toHaveLength(5)
+  let anterior = -1
+  for (const elemento of captura.entrada) {
+    expect(elemento.animaciones).toHaveLength(1)
+    const a = elemento.animaciones[0]!
+    expect(a.duracionMs).toBe(500)
+    expect(a.propiedades.sort()).toEqual(['opacity', 'transform'])
+    expect(a.relleno).toBe('backwards')
+    expect(a.fin).toBeLessThanOrEqual(1400)
+    expect(a.retrasoMs).toBeGreaterThan(anterior)
+    anterior = a.retrasoMs
+    // Oculto desde el primer cuadro: no parpadea
+    expect(elemento.opacidad).toBe('0')
+  }
+  expect(captura.entrada[0]!.animaciones[0]!.retrasoMs).toBe(200)
+  expect(captura.resto.length).toBeGreaterThan(0)
+  expect(captura.resto.every((n) => n === 0)).toBe(true)
 }
 
 /** Registra, al cambiar `data-fase` y al abrirse la carta, las animaciones de las capas y las cajas del relevo. */
@@ -624,6 +698,44 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('#titol')).toBeFocused()
   })
 
+  test('al abrirse, lo inicial entra escalonado (500 ms, opacity y transform) y el resto no se anima (D3)', async ({ page }) => {
+    await capturarEntrada(page)
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 5000 })
+    comprobarEntrada(await leerEntrada(page))
+  })
+
+  test('tras un fallo del vídeo, lo inicial también entra', async ({ page, problemas }) => {
+    await page.route('**/video/*.mp4', (ruta) => ruta.abort())
+    await capturarEntrada(page)
+    await page.goto('/')
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3000 })
+    comprobarEntrada(await leerEntrada(page))
+    // Solo es esperable el error del recurso abortado
+    expect(problemas.filter((p) => !p.includes('ERR_FAILED'))).toEqual([])
+    problemas.length = 0
+  })
+
+  test('acabada la entrada, bajar hasta el final no crea ninguna animación', async ({ page }) => {
+    await arrancarVideo(page)
+    const poner = await simularVideo(page)
+    await poner(1.4)
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 5000 })
+    await expect.poll(() => page.evaluate(() => document.getAnimations().length), { timeout: 4000 }).toBe(0)
+    await page.evaluate(async () => {
+      const mesa = document.querySelector('#mesa')!
+      for (let y = 0; y <= mesa.scrollHeight; y += 200) {
+        mesa.scrollTo(0, y)
+        await new Promise((r) => requestAnimationFrame(r))
+      }
+      mesa.scrollTo(0, mesa.scrollHeight)
+    })
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0)
+  })
+
   test('la CSP de la build permite el vídeo solo del propio sitio (S-04)', async ({ page }) => {
     await page.goto('/')
     const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content')
@@ -673,6 +785,15 @@ test.describe('con movimiento reducido', () => {
     await expect(page.locator('#escenario')).toBeHidden()
     await expect(page.locator('#video-apertura')).toBeHidden()
     await expect(page.locator('#video-apertura')).not.toHaveAttribute('src', /.*/)
+  })
+
+  test('con movimiento reducido no hay animación de entrada propia (D4)', async ({ page }) => {
+    await capturarEntrada(page)
+    await page.goto('/')
+    await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3500 })
+    const captura = await leerEntrada(page)
+    expect(captura.entrada).toHaveLength(5)
+    for (const elemento of captura.entrada) expect(elemento.animaciones).toEqual([])
   })
 
   test('la apertura es un fundido de 300 ms sin escala', async ({ page }) => {

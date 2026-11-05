@@ -7,6 +7,7 @@ import {
 } from '../movimiento'
 import { cargarFuentes } from '../fuentes'
 import { ESTADO_INICIAL, contenidoInerte, transicion, type EventoCarta } from './estado-carta'
+import { animarEntrada } from './entrada'
 import { animarPapel } from './papel'
 import {
   IMAGEN_SOBRE,
@@ -57,6 +58,8 @@ export function iniciarCarta(body: HTMLElement): void {
     aplicar()
     if (estado !== 'abierta') return
     titulo.focus({ preventScroll: true })
+    // La entrada de lo inicial arranca en el mismo tic que el fundido para que no parpadee (D3); con movimiento reducido solo hay fundido (D4)
+    if (!prefiereMovimientoReducido()) animarEntrada([...carta.querySelectorAll<HTMLElement>('[data-entrada]')])
     // Fundido en dos casos: tras un fallo (carta abierta de golpe) o al relevar la imagen fija (`data-fase`).
     // Con movimiento reducido o sin vídeo, el fundido lo hace el CSS
     if (evento === 'fallo' || body.dataset.fase !== undefined) {
