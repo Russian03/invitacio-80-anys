@@ -54,7 +54,7 @@ textarea {
 }
 
 .opcion:has(input:checked) {
-  background-color: #e3eafb;
+  background-color: #efe3cc;
 }
 
 .opcion input {

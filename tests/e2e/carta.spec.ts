@@ -378,7 +378,7 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('body')).not.toHaveAttribute('data-fase', /.*/, { timeout: 3000 })
     for (const capa of ['#boca', '#papel-apertura', '#escenario']) await expect(page.locator(capa)).toBeHidden()
     await expect(page.locator('#fondo-escena')).toBeVisible()
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(29, 35, 55)')
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(70, 40, 39)')
     const medidas = await page.evaluate(() => ({
       scrollY: document.querySelector('#mesa')!.scrollTop,
       top: document.querySelector('#carta')!.getBoundingClientRect().top,
@@ -420,7 +420,7 @@ test.describe('apertura con vídeo', () => {
     })
     expect(estilo.imagen).toContain('/img/fondo-escena.webp')
     expect(estilo.imagenAntes).toContain('/img/fondo-escena.webp')
-    expect(estilo.color).toBe('rgb(29, 35, 55)')
+    expect(estilo.color).toBe('rgb(70, 40, 39)')
     expect(estilo.posicion).toBe('fixed')
     const mascara = await page.locator('#escenario').evaluate((e) => {
       const estilo = getComputedStyle(e)

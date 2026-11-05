@@ -7,16 +7,16 @@ const ANCHO_PAPEL_PX = 760
 // El vídeo de apertura no se reproduce en el Chromium de Playwright (D21)
 test.use({ reducedMotion: 'reduce' })
 
-test('muestra la mesa azul y la carta en catalán', async ({ page, isMobile }) => {
+test('muestra la mesa marrón #462827 y la carta en catalán', async ({ page, isMobile }) => {
   await page.goto('/')
   await abrirCarta(page)
   await expect(page.locator('html')).toHaveAttribute('lang', 'ca')
-  await expect(page.locator('body')).toHaveCSS('background-color', /rgb\(29, 35, 55\)/)
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(70, 40, 39)')
   await expect(page.getByText('VINE A CELEBRAR')).toBeVisible()
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'DATA' })).toBeVisible()
   if (isMobile) {
-    await expect(page.locator('#bloque-data ~ p')).toHaveCSS('font-size', '20px')
+    await expect(page.locator('#bloque-com-arribar ~ p')).toHaveCSS('font-size', '20px')
   }
 })
 
@@ -75,6 +75,34 @@ test('la build lleva CSP y robots', async ({ page }) => {
   await expect(page.locator('meta[name="robots"][content="noindex, nofollow"]')).toHaveCount(1)
 })
 
+test('el fondo de escena es el marrón #462827 plano: esquinas, centro y bordes iguales (±2), sin viñeta (herramientas/recolorear-fondo.py)', async ({ page }) => {
+  await page.goto('/')
+  const muestras = await page.evaluate(async () => {
+    const i = new Image()
+    i.src = '/img/fondo-escena.webp'
+    await i.decode()
+    const c = document.createElement('canvas')
+    c.width = i.width
+    c.height = i.height
+    const g = c.getContext('2d')!
+    g.drawImage(i, 0, 0)
+    const w = i.width
+    const h = i.height
+    const parche = (cx: number, cy: number) => {
+      const d = g.getImageData(cx - 2, cy - 2, 5, 5).data
+      const s = [0, 0, 0]
+      for (let k = 0; k < d.length; k += 4) for (let j = 0; j < 3; j++) s[j]! += d[k + j]!
+      return s.map((v) => v / (d.length / 4))
+    }
+    return [
+      parche(3, 3), parche(w - 4, 3), parche(3, h - 4), parche(w - 4, h - 4),
+      parche(w >> 1, 3), parche(w >> 1, h >> 1), parche(3, h >> 1), parche(w >> 2, h >> 2),
+    ]
+  })
+  const esperado = [0x46, 0x28, 0x27]
+  muestras.forEach((m) => m.forEach((v, j) => expect(Math.abs(v - esperado[j]!)).toBeLessThanOrEqual(2)))
+})
+
 test('la mesa no lleva degradado (el vídeo ya se comprueba contra la mesa en carta.spec)', async ({ page }) => {
   await page.goto('/')
   await abrirCarta(page)
@@ -129,7 +157,8 @@ test('los laterales de la carta son irregulares (papel de trapo): relieve de 1 a
         let suma = 0
         for (let col = 0; col < width; col++) {
           const i = (fila * width + col) * 4
-          suma += (data[i]! + data[i + 1]! + data[i + 2]!) / 3 > 150 ? 1 : 0
+          // Umbral a medio camino entre el papel (~200) y la mesa marrón (~50-80); con 150 un píxel mezclado cruzaba el umbral según el fondo
+          suma += (data[i]! + data[i + 1]! + data[i + 2]!) / 3 > 125 ? 1 : 0
         }
         filas.push(suma)
       }

@@ -94,10 +94,59 @@
   font-size: var(--texto-titulo);
   font-weight: 400;
   line-height: 1.1;
+  color: var(--color-principal);
+}
+
+.texto-script {
+  font-family: var(--fuente-script);
+  font-size: var(--texto-script);
+  line-height: 1.2;
+  color: var(--color-principal);
+}
+
+.programa {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.programa li + li {
+  margin-top: var(--esp-2);
+}
+
+.programa time {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/* Pliegue del papel entre bloques (D6): todo el ancho menos el relieve de los laterales */
+.carta > .pliegue {
+  max-width: none;
+  height: 0;
+  margin-block: var(--esp-6);
+  margin-inline: calc(var(--borde-papel-ancho) - var(--esp-5));
+  border-top: 1px solid var(--color-pliegue);
+}
+
+@media (min-width: 900px) {
+  .carta > .pliegue {
+    margin-inline: calc(var(--borde-papel-ancho) - var(--esp-7));
+  }
+}
+
+/* Línea fina (D5), en el marrón del texto */
+.linea-fina {
+  width: 160px;
+  height: 2px;
+  margin: 0 auto var(--esp-5);
+  background: var(--color-principal);
+}
+
+.carta > .linea-cierre {
+  margin: 0 auto;
 }
 
 .bloque {
-  margin-top: var(--esp-6);
   text-align: center;
 }
 

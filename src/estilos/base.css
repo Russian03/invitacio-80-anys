@@ -18,13 +18,14 @@
 }
 
 :root {
-  /* Color de respaldo de la mesa (D36): el tono medio muestreado de public/img/fondo-escena.webp (rgb 29,35,55, media de la imagen), el fondo permanente de la página; se ve si la imagen no carga y mientras llega */
-  --color-mesa: #1d2337;
+  /* Color de respaldo de la mesa (D36): el tono medio de public/img/fondo-escena.webp, recoloreado a #462827 con herramientas/recolorear-fondo.py (media medida rgb 70,40,39); el fondo permanente de la página, visible si la imagen no carga y mientras llega */
+  --color-mesa: #462827;
   --color-papel: #f3eee1;
-  --color-texto: #12388f;
-  --color-texto-sec: #3d4f7c;
-  --color-principal: #1b4fd6;
-  --color-principal-pulsado: #163fae;
+  --color-texto: #462827; /* marrón oscuro (prueba pedida 2026-11-05): 11,4:1 sobre el papel */
+  --color-texto-sec: #6b4a46; /* 6,7:1 sobre el papel */
+  --color-principal: #462827; /* decorativos y botón: el mismo marrón que el texto (cambio 2026-11-05) */
+  --color-principal-pulsado: #2f1a19;
+  --color-pliegue: #d9d2c0;
   --color-campo: #fbf8f0;
   --color-exito: #1f6b3a;
   --color-error: #b3261e;
