@@ -92,7 +92,6 @@
   margin: var(--esp-3) 0;
   font-family: var(--fuente-script);
   font-size: var(--texto-titulo);
-  font-style: italic;
   font-weight: 400;
   line-height: 1.1;
 }

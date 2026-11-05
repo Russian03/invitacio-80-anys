@@ -5,6 +5,7 @@ import {
   conTope,
   prefiereMovimientoReducido,
 } from '../movimiento'
+import { cargarFuentes } from '../fuentes'
 import { ESTADO_INICIAL, contenidoInerte, transicion, type EventoCarta } from './estado-carta'
 import { animarPapel } from './papel'
 import {
@@ -125,7 +126,7 @@ export function iniciarCarta(body: HTMLElement): void {
   }
 
   const abrir = async () => {
-    await conTope(document.fonts?.ready ?? Promise.resolve(), TOPE_FUENTES_MS)
+    await conTope(cargarFuentes(document.fonts), TOPE_FUENTES_MS)
     if (prefiereMovimientoReducido()) {
       return abrirSinVideo()
     }
