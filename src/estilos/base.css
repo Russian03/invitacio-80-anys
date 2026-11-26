@@ -18,7 +18,7 @@
 }
 
 :root {
-  /* Color de respaldo de la mesa (D36): el tono medio de public/img/fondo-escena.webp, recoloreado a #462827 con herramientas/recolorear-fondo.py (media medida rgb 70,40,39); el fondo permanente de la página, visible si la imagen no carga y mientras llega */
+  /* Color de respaldo de la mesa (D36): el tono medio de public/img/fondo-escena.webp, recoloreado a #462827 (media medida rgb 70,40,39); el fondo permanente de la página, visible si la imagen no carga y mientras llega */
   --color-mesa: #462827;
   --color-papel: #f3eee1;
   --color-texto: #462827; /* marrón oscuro (prueba pedida 2026-11-05): 11,4:1 sobre el papel */

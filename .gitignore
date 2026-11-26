@@ -1,13 +1,45 @@
-.moc/referencias/
-.claude/settings.local.json
+# Dependencias
 node_modules/
+
+# Builds e informes
 dist/
-.env*
-!.env.example
+dist-subruta/
+coverage/
 test-results/
 playwright-report/
-coverage/
-*.jfif
-*:Zone.Identifier
+blob-report/
 
+# Secretos y claves de API
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.*
+credentials*.json
+
+# Asistentes de IA y su documentación interna
+.claude/
+.moc/
+.mcp.json
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+
+# Material local que no se publica (referencias, originales, herramientas)
+_local/
+*.jfif
+
+# Sistema, editores y cachés
+.DS_Store
+Thumbs.db
+desktop.ini
+*:Zone.Identifier
+.vscode/
+.idea/
+*.swp
+*.log
 __pycache__/
+*.py[cod]

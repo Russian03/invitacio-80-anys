@@ -75,7 +75,7 @@ test('la build lleva CSP y robots', async ({ page }) => {
   await expect(page.locator('meta[name="robots"][content="noindex, nofollow"]')).toHaveCount(1)
 })
 
-test('el fondo de escena es el marrón #462827 plano: esquinas, centro y bordes iguales (±2), sin viñeta (herramientas/recolorear-fondo.py)', async ({ page }) => {
+test('el fondo de escena es el marrón #462827 plano: esquinas, centro y bordes iguales (±2), sin viñeta', async ({ page }) => {
   await page.goto('/')
   const muestras = await page.evaluate(async () => {
     const i = new Image()
