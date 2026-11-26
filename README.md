@@ -4,7 +4,7 @@
 
 Invitación web en catalán a un 80 cumpleaños, pensada primero para el móvil y para invitados de todas las edades: un sobre que se abre solo, una carta que sale de él, fotos apiladas y un formulario de confirmación.
 
-> **Estado:** en desarrollo. Falta el número de cuenta. Las respuestas se guardan en una hoja de cálculo (ver [Respuestas](#respuestas)).
+> **Estado:** publicada en <https://russian03.github.io/invitacio-80-anys/>. Falta el número de cuenta. Las respuestas se guardan en una hoja de cálculo (ver [Respuestas](#respuestas)).
 
 ## Tecnología
 
