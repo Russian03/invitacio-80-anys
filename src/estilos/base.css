@@ -26,6 +26,7 @@
   --color-principal: #462827; /* decorativos y botón: el mismo marrón que el texto (cambio 2026-11-05) */
   --color-principal-pulsado: #2f1a19;
   --color-pliegue: #d9d2c0;
+  --color-festa: #9a3324; /* teja: mes y día de la fiesta en el calendario; 6,3:1 sobre el papel */
   --color-campo: #fbf8f0;
   --color-exito: #1f6b3a;
   --color-error: #b3261e;
@@ -121,6 +122,16 @@ body {
 body[data-estado='cerrada'] .mesa,
 body[data-estado='abriendo'] .mesa {
   overflow-y: hidden;
+}
+
+/* Se lee con lector de pantalla pero no se ve */
+.nomes-lectors {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 :focus-visible {

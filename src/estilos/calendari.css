@@ -1,0 +1,59 @@
+/* Fecha como una tira de calendario: mes entre dos rayas, cuatro días y el de la fiesta rodeado a lápiz */
+.calendari {
+  max-width: 420px;
+  margin-inline: auto;
+  font-variant-numeric: lining-nums;
+}
+
+.bloque .calendari-mes {
+  padding-block: var(--esp-1);
+  border-block: 2px solid var(--color-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-festa);
+}
+
+.calendari-dies {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  border-bottom: 2px solid var(--color-texto);
+  list-style: none;
+}
+
+.calendari-dies li {
+  position: relative;
+  padding-block: var(--esp-4);
+  font-size: clamp(2rem, 10vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.calendari-dies li + li {
+  border-left: 2px solid var(--color-texto);
+}
+
+.calendari-festa {
+  color: var(--color-festa);
+}
+
+/* El círculo se sale un poco de la casilla, inclinado, como hecho a mano */
+.calendari-cercle {
+  position: absolute;
+  top: -15%;
+  left: -13%;
+  width: 126%;
+  height: 130%;
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--color-festa);
+  stroke-width: 4px;
+  stroke-linecap: round;
+}
+
+.calendari-cercle path {
+  vector-effect: non-scaling-stroke;
+}

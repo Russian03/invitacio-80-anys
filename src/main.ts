@@ -1,5 +1,6 @@
 import './estilos/base.css'
 import './estilos/carta.css'
+import './estilos/calendari.css'
 import './estilos/apertura.css'
 import './estilos/papel-apertura.css'
 import './estilos/triptico.css'

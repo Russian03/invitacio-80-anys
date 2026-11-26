@@ -70,9 +70,33 @@
         <div class="pliegue" aria-hidden="true"></div>
 
         <section class="bloque" aria-labelledby="bloque-data" data-entrada>
-          <h2 id="bloque-data" class="etiqueta">DATA</h2>
-          <!-- PROVISIONAL: dato real pendiente (prd.md → Dudas) -->
-          <p class="texto-script">Dissabte, 15 de març de 2027</p>
+          <h2 id="bloque-data" class="etiqueta nomes-lectors">DATA</h2>
+          <p class="nomes-lectors"><time datetime="2027-02-27">Dissabte, 27 de febrer de 2027</time></p>
+          <!-- Tira de calendario: solo visual, la fecha se lee en el párrafo anterior -->
+          <div class="calendari" aria-hidden="true">
+            <p class="calendari-mes">Febrer</p>
+            <ol class="calendari-dies">
+              <li>25</li>
+              <li>26</li>
+              <li class="calendari-festa">
+                27
+                <!-- Círculo a lápiz: dos pasadas que no cierran igual, con grano -->
+                <svg class="calendari-cercle" viewBox="0 0 100 112" preserveAspectRatio="none" focusable="false">
+                  <filter id="gra-llapis" x="-15%" y="-15%" width="130%" height="130%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="7" result="soroll" />
+                    <feDisplacementMap in="SourceGraphic" in2="soroll" scale="3" result="mogut" />
+                    <feColorMatrix in="soroll" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.4 2.15" result="gra" />
+                    <feComposite in="mogut" in2="gra" operator="in" />
+                  </filter>
+                  <g filter="url(#gra-llapis)">
+                    <path d="M18 25C20 6 45 -1 66 13C88 30 103 73 93 95C82 116 50 108 30 87C10 65 2 34 16 16C24 6 38 3 50 7" />
+                    <path d="M8 21C1 40 6 58 17 73" />
+                  </g>
+                </svg>
+              </li>
+              <li>28</li>
+            </ol>
+          </div>
         </section>
 
         <div class="pliegue" aria-hidden="true"></div>

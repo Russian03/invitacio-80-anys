@@ -95,10 +95,66 @@ test.describe('bloques de contenido (T4)', () => {
   test('los acentos y el punto volado se ven tal cual', async ({ page }) => {
     await page.goto('/')
     await abrirCarta(page)
-    await expect(page.getByText('Dissabte, 15 de març de 2027')).toBeVisible()
     await expect(page.getByText('Carrer de Lorem, 1 · 00000 Ipsum')).toBeVisible()
     await expect(page.getByText('Al·lèrgens o intoleràncies (opcional)')).toBeVisible()
   })
+})
+
+test.describe('fecha en forma de calendario', () => {
+  test('muestra el mes y los días 25 a 28, con el 27 marcado con un círculo', async ({ page }) => {
+    await page.goto('/')
+    await abrirCarta(page)
+    const calendari = page.locator('.calendari')
+    await expect(calendari.locator('.calendari-mes')).toHaveText('Febrer')
+    expect((await calendari.locator('li').allTextContents()).map((d) => d.trim())).toEqual(['25', '26', '27', '28'])
+    const festa = calendari.locator('li.calendari-festa')
+    await expect(festa).toHaveCount(1)
+    await expect(festa).toHaveText('27')
+    await expect(festa.locator('svg')).toBeVisible()
+  })
+
+  test('quien usa un lector de pantalla oye la fecha completa y no los números sueltos', async ({ page }) => {
+    await page.goto('/')
+    await abrirCarta(page)
+    const fecha = page.locator('#bloque-data ~ p time')
+    await expect(fecha).toHaveText('Dissabte, 27 de febrer de 2027')
+    await expect(fecha).toHaveAttribute('datetime', '2027-02-27')
+    await expect(page.locator('.calendari')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  test('el mes y el día de la fiesta destacan en otro color, legible sobre el papel', async ({ page }) => {
+    await page.goto('/')
+    await abrirCarta(page)
+    const color = (s: string) => page.locator(s).evaluate((e) => getComputedStyle(e).color)
+    const festa = await color('.calendari-festa')
+    expect(await color('.calendari-mes')).toBe(festa)
+    expect(festa).not.toBe(await color('.calendari li:first-child'))
+    expect((luminancia('rgb(243, 238, 225)') + 0.05) / (luminancia(festa) + 0.05)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  for (const width of [320, 360, 412, 1280]) {
+    test(`a ${width} px de ancho el calendario y su círculo caben dentro de la carta`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 })
+      await page.goto('/')
+      await abrirCarta(page)
+      const cajas = await page.evaluate(() => {
+        const caja = (s: string) => document.querySelector(s)!.getBoundingClientRect()
+        const dias = [...document.querySelectorAll('.calendari li')].map((e) => e.getBoundingClientRect())
+        return {
+          carta: caja('#carta'),
+          partes: [caja('.calendari'), caja('.calendari-festa svg')],
+          enUnaFila: new Set(dias.map((d) => Math.round(d.top))).size === 1,
+        }
+      })
+      expect(cajas.enUnaFila).toBe(true)
+      const calendari = cajas.partes[0]!
+      expect(Math.abs(calendari.left - cajas.carta.left - (cajas.carta.right - calendari.right))).toBeLessThanOrEqual(1)
+      for (const parte of cajas.partes) {
+        expect(parte.left).toBeGreaterThanOrEqual(cajas.carta.left)
+        expect(parte.right).toBeLessThanOrEqual(cajas.carta.right)
+      }
+    })
+  }
 })
 
 test.describe('estilos de los bloques (T5)', () => {
