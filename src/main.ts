@@ -12,7 +12,7 @@ import './estilos/regal.css'
 import './estilos/pulsacion.css'
 import { iniciarCarrusel } from './carrusel/carrusel'
 import { iniciarCarta } from './carta/carta'
-import { envioSimulado } from './formulario/envio'
+import { crearEnvio } from './formulario/envio'
 import { iniciarFormulario } from './formulario/formulario'
 import { iniciarPulsacion } from './pulsacion'
 
@@ -23,4 +23,4 @@ const carrusel = document.querySelector<HTMLElement>('#carrusel')
 if (carrusel) iniciarCarrusel(carrusel)
 
 const form = document.querySelector<HTMLFormElement>('#form-confirmacio')
-if (form) iniciarFormulario(form, envioSimulado)
+if (form) iniciarFormulario(form, crearEnvio(import.meta.env.VITE_URL_RESPUESTAS))

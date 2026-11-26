@@ -31,6 +31,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Comprobar que las respuestas tienen destino
+        run: |
+          patron='^https://script\.google\.com/(macros|a/macros/[A-Za-z0-9_.-]+)/s/[A-Za-z0-9_-]+/exec$'
+          if ! printf '%s' "$URL_RESPUESTAS" | grep -Eq "$patron"; then
+            echo "::error::Falta la variable VITE_URL_RESPUESTAS (README, apartado Respuestas). Sin ella el formulario no guarda nada."
+            exit 1
+          fi
+        env:
+          URL_RESPUESTAS: ${{ vars.VITE_URL_RESPUESTAS }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -41,6 +50,7 @@ jobs:
       - run: npm run build -- --base="${BASE_PATH}/"
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          VITE_URL_RESPUESTAS: ${{ vars.VITE_URL_RESPUESTAS }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist

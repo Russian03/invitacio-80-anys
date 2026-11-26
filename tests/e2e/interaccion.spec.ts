@@ -10,30 +10,22 @@ async function abrir(page: Page, movimiento: boolean) {
   if (movimiento) await page.emulateMedia({ reducedMotion: 'no-preference' })
 }
 
-/** Transformaciones de las animaciones vivas de un elemento. */
-const transformaciones = (page: Page, selector: string) =>
-  page.evaluate(
-    (s) =>
-      document
-        .getAnimations()
-        .filter((a) => (a.effect as KeyframeEffect).target === document.querySelector(s) && !('transitionProperty' in a))
-        .flatMap((a) => (a.effect as KeyframeEffect).getKeyframes().map((k) => String(k.transform))),
-    selector,
-  )
-
-/** Registra qué elementos reciben una animación de `translateX`, aunque ya haya terminado cuando se mire. */
-async function registrarTemblores(page: Page) {
-  await page.evaluate(() => {
-    const w = window as unknown as { __temblores: string[] }
-    w.__temblores = []
+/**
+ * Registra qué elementos reciben una animación cuyos fotogramas contienen `texto`, aunque ya haya terminado cuando se
+ * mire (con la máquina cargada, una animación corta puede acabar antes de la comprobación).
+ */
+async function registrarAnimaciones(page: Page, texto: 'translateX' | 'scale(') {
+  await page.evaluate((buscado) => {
+    const w = window as unknown as { __animados: string[] }
+    w.__animados = []
     const original = Element.prototype.animate
     Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
-      if (JSON.stringify(args[0]).includes('translateX')) w.__temblores.push(this.id || this.className)
+      if (JSON.stringify(args[0]).includes(buscado)) w.__animados.push(this.id || this.className)
       return original.apply(this, args)
     }
-  })
+  }, texto)
 }
-const temblores = (page: Page) => page.evaluate(() => (window as unknown as { __temblores: string[] }).__temblores)
+const animados = (page: Page) => page.evaluate(() => (window as unknown as { __animados: string[] }).__animados)
 
 const enviar = (page: Page) => page.getByRole('button', { name: 'Confirmar assistència' })
 
@@ -65,15 +57,17 @@ test.describe('animación al pulsar', () => {
     test(`${selector} rebota al pulsarlo`, async ({ page }) => {
       await abrir(page, true)
       await sinNavegar(page)
+      await registrarAnimaciones(page, 'scale(')
       await page.locator(selector).click()
-      expect((await transformaciones(page, selector)).join(' ')).toContain('scale(')
+      await expect.poll(() => animados(page)).toEqual([selector.slice(1)])
     })
   }
 
   test('la respuesta elegida rebota', async ({ page }) => {
     await abrir(page, true)
+    await registrarAnimaciones(page, 'scale(')
     await page.locator('.opcion').nth(1).click()
-    expect((await transformaciones(page, '.opciones .opcion:nth-child(2)')).join(' ')).toContain('scale(')
+    await expect.poll(() => animados(page)).toEqual(['opcion'])
   })
 
   test('con movimiento reducido no rebota', async ({ page }) => {
@@ -97,51 +91,51 @@ test.describe('aviso de lo que falta', () => {
 
   test('sin nombre, vuelve a su casilla, le pone el foco y tiembla', async ({ page }) => {
     await abrir(page, true)
-    await registrarTemblores(page)
+    await registrarAnimaciones(page, 'translateX')
     await page.locator('.opcion').first().click()
     await enviarDesdeAbajo(page)
     await expect(page.locator('#nom')).toBeFocused()
     await expect(page.locator('#nom')).toBeInViewport({ ratio: 1 })
-    await expect.poll(() => temblores(page)).toEqual(['nom'])
+    await expect.poll(() => animados(page)).toEqual(['nom'])
     await expect(page.getByText('Escriu el teu nom')).toBeVisible()
   })
 
   test('sin respuesta, vuelve a «Hi seràs?» y tiemblan las dos opciones', async ({ page }) => {
     await abrir(page, true)
-    await registrarTemblores(page)
+    await registrarAnimaciones(page, 'translateX')
     await page.locator('#nom').fill('Maria')
     await page.locator('#mesa').evaluate((m) => m.scrollTo(0, m.scrollHeight))
     await enviar(page).click()
     await expect(page.locator('input[name="assistira"]').first()).toBeFocused()
     await expect(page.locator('.opciones')).toBeInViewport({ ratio: 1 })
-    await expect.poll(() => temblores(page)).toEqual(['opciones'])
+    await expect.poll(() => animados(page)).toEqual(['opciones'])
   })
 
   test('si faltan las dos cosas, tiemblan las dos y va a la primera', async ({ page }) => {
     await abrir(page, true)
-    await registrarTemblores(page)
+    await registrarAnimaciones(page, 'translateX')
     await enviarDesdeAbajo(page)
     await expect(page.locator('#nom')).toBeFocused()
-    await expect.poll(() => temblores(page)).toEqual(['nom', 'opciones'])
+    await expect.poll(() => animados(page)).toEqual(['nom', 'opciones'])
   })
 
   test('con movimiento reducido vuelve a la casilla sin temblar', async ({ page }) => {
     await abrir(page, false)
-    await registrarTemblores(page)
+    await registrarAnimaciones(page, 'translateX')
     await enviarDesdeAbajo(page)
     await expect(page.locator('#nom')).toBeFocused()
     await expect(page.locator('#nom')).toBeInViewport({ ratio: 1 })
     await page.waitForTimeout(300)
-    expect(await temblores(page)).toEqual([])
+    expect(await animados(page)).toEqual([])
   })
 
   test('con todo relleno no tiembla nada', async ({ page }) => {
     await abrir(page, true)
-    await registrarTemblores(page)
+    await registrarAnimaciones(page, 'translateX')
     await page.locator('#nom').fill('Maria')
     await page.locator('.opcion').first().click()
     await enviar(page).click()
     await expect(page.locator('#exito')).toBeVisible()
-    expect(await temblores(page)).toEqual([])
+    expect(await animados(page)).toEqual([])
   })
 })

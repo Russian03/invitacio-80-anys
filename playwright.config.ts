@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { URL_PRUEBA } from './tests/destino-prueba'
 
 const URL_BASE = 'http://localhost:4173'
 
@@ -17,6 +18,8 @@ export default defineConfig({
     command: 'npm run build && npm run preview -- --port 4173 --strictPort',
     url: URL_BASE,
     reuseExistingServer: false,
+    // La build de prueba no apunta nunca a la hoja de verdad, aunque haya un `.env.local`
+    env: { VITE_URL_RESPUESTAS: URL_PRUEBA },
   },
   projects: [
     { name: 'escritorio', use: devices['Desktop Chrome'] },
