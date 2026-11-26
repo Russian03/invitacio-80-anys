@@ -1,0 +1,109 @@
+/*
+ * Carta plegada en tres (móvil en vertical). Vive dentro de `#boca`, que la recorta mientras está detrás del sobre.
+ * JS coloca el tríptico en la caja final de `#carta` y reparte su alto en `--alto-panel`. La hoja (papel, bordes y
+ * sombra) usa las reglas compartidas de carta.css: cada cara interior muestra su tercio de la misma hoja.
+ * El contenedor no es `preserve-3d`: los paneles se pintan en el orden del HTML (centro, abajo, arriba), que es el
+ * orden en que quedan plegados.
+ */
+.triptico {
+  display: none;
+  position: absolute;
+  transform-origin: 0 0;
+  perspective: 1800px;
+  will-change: transform;
+}
+
+body[data-fase='papel-sube'] .triptico[data-activo] {
+  display: block;
+}
+
+.panel {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--alto-panel);
+  transform-style: preserve-3d;
+}
+
+.panel-arriba {
+  top: 0;
+  transform-origin: center bottom;
+}
+
+.panel-centro {
+  top: var(--alto-panel);
+  --desfase: calc(-1 * var(--alto-panel));
+}
+
+.panel-abajo {
+  top: calc(2 * var(--alto-panel));
+  transform-origin: center top;
+  --desfase: calc(-2 * var(--alto-panel));
+}
+
+.cara {
+  position: absolute;
+  inset: 0;
+  /* Crea el contexto donde van el papel y la sombra (z-index -1) */
+  z-index: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Textura y relieve continuos: cada cara interior enseña el tercio que le toca */
+.triptico .cara-frente::after {
+  background-position: center var(--desfase, 0px);
+  -webkit-mask-position: left var(--desfase, 0px), right var(--desfase, 0px), var(--borde-papel-ancho) 0;
+  mask-position: left var(--desfase, 0px), right var(--desfase, 0px), var(--borde-papel-ancho) 0;
+}
+
+/*
+ * Sombra de las caras interiores: abiertas, las tres suman la de una sola hoja. La caja de la sombra se alarga hacia
+ * los paneles vecinos y se recorta en el doblez, para que no caiga sombra de un tercio sobre otro.
+ */
+.panel-arriba .cara-frente::before {
+  bottom: -80px;
+  clip-path: inset(-80px -80px 80px -80px);
+}
+
+.panel-centro .cara-frente::before {
+  top: -80px;
+  bottom: -80px;
+  clip-path: inset(80px -80px);
+}
+
+.panel-abajo .cara-frente::before {
+  top: -80px;
+  clip-path: inset(80px -80px -80px -80px);
+}
+
+/* El papel del centro asoma 1 px bajo cada solapa: sin esto, el suavizado de los bordes deja una raya en el doblez */
+.panel-centro .cara-frente::after {
+  inset-block: -1px;
+  background-position: center calc(var(--desfase) + 1px);
+  -webkit-mask-position: left calc(var(--desfase) + 1px), right calc(var(--desfase) + 1px), var(--borde-papel-ancho) 0;
+  mask-position: left calc(var(--desfase) + 1px), right calc(var(--desfase) + 1px), var(--borde-papel-ancho) 0;
+}
+
+.cara-dorso {
+  transform: rotateX(180deg);
+}
+
+/* El dorso es el mismo papel, un punto más apagado */
+.triptico .cara-dorso::after {
+  background-color: #e6dfcd;
+  background-blend-mode: multiply;
+}
+
+/* Sombra del giro, más densa junto al doblez; JS anima su opacidad */
+.velo {
+  position: absolute;
+  inset: 0 var(--borde-papel-ancho);
+  opacity: 0;
+  background: linear-gradient(to var(--hacia-doblez, bottom), rgb(70 40 39 / 0.25), rgb(70 40 39 / 0.9));
+}
+
+.panel-abajo .cara-frente .velo,
+.panel-arriba .cara-dorso .velo {
+  --hacia-doblez: top;
+}

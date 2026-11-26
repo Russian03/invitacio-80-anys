@@ -9,6 +9,7 @@ import { cargarFuentes } from '../fuentes'
 import { ESTADO_INICIAL, contenidoInerte, transicion, type EventoCarta } from './estado-carta'
 import { animarEntrada } from './entrada'
 import { animarPapel } from './papel'
+import { animarTriptico, usaTriptico } from './triptico'
 import {
   IMAGEN_SOBRE,
   SOBRE_QUIETO_S,
@@ -28,7 +29,8 @@ function terminadas(raiz: Element): Promise<unknown> {
 /**
  * Lleva la carta de cerrada a abierta: el estado vive en `data-estado` del body.
  * Se reproduce el vídeo del sobre y, al quedar quieto (SOBRE_QUIETO_S), una imagen fija ocupa su sitio, un papel
- * decorativo sale por la boca y crece hasta la caja de la carta, y la carta real lo releva con un fundido; con movimiento reducido o si el vídeo falla, solo el fundido. Si falta algún
+ * decorativo sale por la boca y crece hasta la caja de la carta (en móvil en vertical sale plegado en tríptico, se
+ * despliega y hace zoom), y la carta real lo releva con un fundido; con movimiento reducido o si el vídeo falla, solo el fundido. Si falta algún
  * elemento, no toca nada y la carta queda visible.
  */
 export function iniciarCarta(body: HTMLElement): void {
@@ -122,7 +124,9 @@ export function iniciarCarta(body: HTMLElement): void {
     body.dataset.fase = 'papel-sube'
     soltarVideo()
     // El papel sube y crece; si no se puede animar o se cancela, fundido (D10, D34)
-    const papelAnimado = animarPapel({ body, carta, boca, papel, escenario })
+    const capas = { body, carta, boca, papel, escenario }
+    const triptico = body.querySelector<HTMLElement>('#triptico')
+    const papelAnimado = triptico && usaTriptico() ? animarTriptico({ ...capas, triptico }) : animarPapel(capas)
     cancelarPapel = papelAnimado.cancelar
     if (!(await papelAnimado.terminada) || estado !== 'abriendo') return fallar()
     pasar('fin-animacion')

@@ -12,7 +12,8 @@
 }
 
 /*
- * Hoja de papel, común a la carta real y a la hoja decorativa de la apertura (no pueden diferir ni un píxel).
+ * Hoja de papel, común a la carta real, a la hoja decorativa de la apertura (no pueden diferir ni un píxel) y a las
+ * caras del tríptico (triptico.css).
  * Va en pseudoelementos detrás del contenido: `::after` es el papel con su máscara (dos tiras laterales con el borde
  * irregular, papel de trapo, relieve pequeñísimo y uniforme de arriba abajo, y un relleno liso en medio) y `::before`
  * es la sombra. La sombra es un box-shadow de un rectángulo metido 2 px por los lados (lo que más se come el relieve),
@@ -22,7 +23,9 @@
 .carta::before,
 .carta::after,
 .papel-apertura::before,
-.papel-apertura::after {
+.papel-apertura::after,
+.triptico .cara::before,
+.triptico .cara::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -30,13 +33,15 @@
 }
 
 .carta::before,
-.papel-apertura::before {
+.papel-apertura::before,
+.triptico .cara::before {
   inset-inline: calc(var(--borde-papel-ancho) / 2);
   box-shadow: var(--sombra-papel);
 }
 
 .carta::after,
-.papel-apertura::after {
+.papel-apertura::after,
+.triptico .cara::after {
   /* Papel del último fotograma del vídeo (D18): baja con el scroll, el pliegue se repite */
   background-color: var(--color-papel);
   background-image: url('/img/papel.webp');

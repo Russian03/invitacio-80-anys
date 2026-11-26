@@ -36,7 +36,7 @@ Antes de los tests en navegador, una sola vez: `npx playwright install chromium`
 ```
 index.html          Página única
 src/
-  carta/            Apertura del sobre y de la carta
+  carta/            Apertura del sobre y de la carta (en móvil, en tríptico)
   carrusel/         Pila de fotos
   formulario/       Validación y envío
   estilos/          Un CSS por componente; variables en base.css
