@@ -10,7 +10,7 @@ const GIROS = [-9, -4, 4, 9]
 const ALTAS = [false, true, false, true]
 const ARCHIVOS = ['foto-03.webp', 'foto-05.webp', 'foto-06.webp', 'foto-07.webp']
 
-test.describe('carrusel: posición y aspecto (T3)', () => {
+test.describe('carrusel: posición y aspecto', () => {
   test('va tras la presentación y antes de «On i quan?» en el orden de lectura', async ({ page }) => {
     await page.goto('/')
     await abrirCarta(page)
@@ -88,7 +88,7 @@ test.describe('carrusel: posición y aspecto (T3)', () => {
     })
   }
 
-  test('cada foto tiene una inclinación distinta (D5)', async ({ page }) => {
+  test('cada foto tiene una inclinación distinta', async ({ page }) => {
     await page.goto('/')
     await abrirCarta(page)
     const giros = await page
@@ -223,7 +223,7 @@ test.describe('carrusel: posición y aspecto (T3)', () => {
   }
 })
 
-test.describe('carrusel sin JavaScript (T3)', () => {
+test.describe('carrusel sin JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
   test('se ve la pila con la foto 1 arriba', async ({ page }) => {

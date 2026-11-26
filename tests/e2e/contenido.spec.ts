@@ -87,7 +87,7 @@ function luminancia(css: string): number {
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
 }
 
-test.describe('bloques de contenido (T4)', () => {
+test.describe('bloques de contenido', () => {
   test('los títulos de bloque salen en orden', async ({ page }) => {
     await page.goto('/')
     await abrirCarta(page)
@@ -301,7 +301,7 @@ test.describe('fecha en forma de calendario', () => {
   }
 })
 
-test.describe('estilos de los bloques (T5)', () => {
+test.describe('estilos de los bloques', () => {
   test('el cuerpo mide 20 px en móvil y 22 px en escritorio', async ({ page, isMobile }) => {
     await page.goto('/')
     await abrirCarta(page)

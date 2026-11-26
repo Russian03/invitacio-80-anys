@@ -19,7 +19,7 @@ export function usaTriptico(): boolean {
 /**
  * La carta sale del sobre plegada en tres (recortada por la boca, como el papel de escritorio), pasa delante, va al
  * centro mientras el sobre se funde, despliega la solapa de arriba y luego la de abajo, y ya abierta se cambia por la
- * hoja única (`#papel-apertura`), que hace zoom hasta la caja de `#carta`. Lanza si no se puede preparar (D10).
+ * hoja única (`#papel-apertura`), que hace zoom hasta la caja de `#carta`. Lanza si no se puede preparar.
  */
 export function animarTriptico(capas: CapasTriptico): Animacion {
   const { carta, boca, papel, escenario, triptico } = capas

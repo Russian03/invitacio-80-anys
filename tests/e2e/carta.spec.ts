@@ -5,7 +5,7 @@ import { abrirCarta, expect, test } from './fixtures'
 test.describe('sin JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
-  test('sin JavaScript la carta se ve abierta (S-11)', async ({ page }) => {
+  test('sin JavaScript la carta se ve abierta', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('#titol')).toBeVisible()
     await expect(page.locator('#carta')).not.toHaveAttribute('inert', /.*/)
@@ -21,7 +21,7 @@ test.describe('sin JavaScript', () => {
     }
   })
 
-  test('sin JavaScript no se ve ni se descarga el vídeo (S-11)', async ({ page }) => {
+  test('sin JavaScript no se ve ni se descarga el vídeo', async ({ page }) => {
     const peticiones: string[] = []
     page.on('request', (peticion) => peticiones.push(peticion.url()))
     await page.goto('/')
@@ -30,7 +30,7 @@ test.describe('sin JavaScript', () => {
   })
 })
 
-/** Retiene la petición del .mp4 sin responder: el vídeo ni falla ni arranca; los eventos se simulan (D21). */
+/** Retiene la petición del .mp4 sin responder: el vídeo ni falla ni arranca; los eventos se simulan. */
 async function retenerVideo(page: Page) {
   await page.route('**/video/*.mp4', () => {})
 }
@@ -105,7 +105,7 @@ async function leerEntrada(page: Page): Promise<CapturaEntrada> {
   return page.evaluate(() => (window as unknown as { __entrada: CapturaEntrada }).__entrada)
 }
 
-/** Comprueba la entrada escalonada de lo inicial (D3). */
+/** Comprueba la entrada escalonada de lo inicial. */
 function comprobarEntrada(captura: CapturaEntrada) {
   expect(captura.entrada).toHaveLength(5)
   let anterior = -1
@@ -197,7 +197,7 @@ async function leerFases(page: Page): Promise<Fases> {
 /** Ventana apaisada (16:9) para los tests del vídeo. */
 const VENTANA_CON_VIDEO = { width: 1600, height: 900 }
 
-/** Simula duración y tiempo del vídeo (D21): devuelve una función que fija el tiempo y avisa con `timeupdate`. */
+/** Simula duración y tiempo del vídeo: devuelve una función que fija el tiempo y avisa con `timeupdate`. */
 async function simularVideo(page: Page, duracion = 3.04) {
   await page.locator('#video-apertura').evaluate((v, d) => {
     let actual = 0
@@ -311,7 +311,7 @@ test.describe('apertura con vídeo', () => {
     expect(total).toBeGreaterThanOrEqual(800)
     expect(sube.papel.map((a) => ({ ...a, propiedades: [...a.propiedades].sort() }))).toEqual([{ duracionMs: total, propiedades: ['height', 'transform'] }])
     expect(de('boca')).toEqual([{ id: 'boca', duracionMs: total, propiedades: ['clipPath'] }])
-    // El fondo de escena es permanente (D36): no se anima
+    // El fondo de escena es permanente: no se anima
     expect(de('fondo-escena')).toEqual([])
     expect(de('escenario')).toEqual([{ id: 'escenario', duracionMs: total, propiedades: ['opacity'] }])
     expect(sube.clip).toMatch(/^polygon\(/)
@@ -390,7 +390,7 @@ test.describe('apertura con vídeo', () => {
     const opacidades = (await alFrente.jsonValue()) as { escenario: string; fondo: string }
     expect(Number(opacidades.escenario)).toBeGreaterThan(0.95)
     expect(Number(opacidades.fondo)).toBeGreaterThan(0.95)
-    // Al final, solo queda el fondo permanente (D36)
+    // Al final, solo queda el fondo permanente
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 6000 })
     await expect(page.locator('#escenario')).toHaveCSS('opacity', '0')
     await expect(page.locator('#fondo-escena')).toHaveCSS('opacity', '1')
@@ -433,11 +433,11 @@ test.describe('apertura con vídeo', () => {
       expect(relevo.papel.sombra).not.toBe('none')
       expect(relevo.papel.sombra.match(/rgba?\(/g)!.length).toBeGreaterThanOrEqual(4)
       expect(relevo.papel.sombra).toBe(relevo.carta.sombra)
-      // Bordes de papel de trapo: mismas tiras de máscara en la hoja y en la carta (D37)
+      // Bordes de papel de trapo: mismas tiras de máscara en la hoja y en la carta
       expect(relevo.papel.mascara[0]).toContain('borde-papel-izq')
       expect(relevo.papel.mascara[0]).toContain('borde-papel-der')
       expect(relevo.papel.mascara).toEqual(relevo.carta.mascara)
-      // El escenario se ha fundido; el fondo de escena sigue entero (D36)
+      // El escenario se ha fundido; el fondo de escena sigue entero
       expect(relevo.opacidadEscena).toEqual({ fondo: '1', escenario: '0' })
       expect(relevo.fondoBg).toContain('fondo-escena')
     })
@@ -464,7 +464,7 @@ test.describe('apertura con vídeo', () => {
     expect(medidas.sinScroll).toBe(true)
   })
 
-  test('si falla la animación del papel, la carta aparece con un fundido (D10, D34)', async ({ page }) => {
+  test('si falla la animación del papel, la carta aparece con un fundido', async ({ page }) => {
     await page.addInitScript(() => {
       const original = Element.prototype.animate
       Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
@@ -483,7 +483,7 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('#boca')).toBeHidden()
   })
 
-  test('el fondo de escena es la imagen del exterior del sobre, con el color de la mesa de respaldo, y el escenario tiene los bordes difuminados (D36)', async ({ page }) => {
+  test('el fondo de escena es la imagen del exterior del sobre, con el color de la mesa de respaldo, y el escenario tiene los bordes difuminados', async ({ page }) => {
     await arrancarVideo(page)
     const fondo = page.locator('#fondo-escena')
     await expect(fondo).toBeVisible()
@@ -503,7 +503,7 @@ test.describe('apertura con vídeo', () => {
     expect(mascara).toContain('linear-gradient')
   })
 
-  test('el fondo de escena se queda fixed detrás de la carta y del scroll tras la apertura (D36)', async ({ page }) => {
+  test('el fondo de escena se queda fixed detrás de la carta y del scroll tras la apertura', async ({ page }) => {
     await arrancarVideo(page)
     const poner = await simularVideo(page)
     await poner(1.4)
@@ -630,7 +630,7 @@ test.describe('apertura con vídeo', () => {
     problemas.length = 0
   })
 
-  test('si la imagen fija no responde, a los 4 s la carta aparece con un fundido (D10)', async ({ page }) => {
+  test('si la imagen fija no responde, a los 4 s la carta aparece con un fundido', async ({ page }) => {
     await page.route('**/img/sobre-abierto.webp', () => {})
     await retenerVideo(page)
     await capturarFundidoAlAbrir(page)
@@ -687,7 +687,7 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('#titol')).toBeFocused()
   })
 
-  test('si algo falla al arrancar el vídeo, la carta aparece (D10)', async ({ page }) => {
+  test('si algo falla al arrancar el vídeo, la carta aparece', async ({ page }) => {
     await retenerVideo(page)
     await page.addInitScript(() => {
       HTMLMediaElement.prototype.play = () => {
@@ -699,7 +699,7 @@ test.describe('apertura con vídeo', () => {
     await expect(page.locator('#titol')).toBeFocused()
   })
 
-  test('al abrirse, lo inicial entra escalonado (500 ms, opacity y transform) y el resto no se anima (D3)', async ({ page }) => {
+  test('al abrirse, lo inicial entra escalonado (500 ms, opacity y transform) y el resto no se anima', async ({ page }) => {
     await capturarEntrada(page)
     await arrancarVideo(page)
     const poner = await simularVideo(page)
@@ -737,7 +737,7 @@ test.describe('apertura con vídeo', () => {
     expect(await page.evaluate(() => document.getAnimations().length)).toBe(0)
   })
 
-  test('la CSP de la build permite el vídeo solo del propio sitio (S-04)', async ({ page }) => {
+  test('la CSP de la build permite el vídeo solo del propio sitio', async ({ page }) => {
     await page.goto('/')
     const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content')
     expect(csp).toContain("media-src 'self'")
@@ -788,7 +788,7 @@ test.describe('con movimiento reducido', () => {
     await expect(page.locator('#video-apertura')).not.toHaveAttribute('src', /.*/)
   })
 
-  test('con movimiento reducido no hay animación de entrada propia (D4)', async ({ page }) => {
+  test('con movimiento reducido no hay animación de entrada propia', async ({ page }) => {
     await capturarEntrada(page)
     await page.goto('/')
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3500 })
@@ -828,7 +828,7 @@ test.describe('con movimiento reducido', () => {
   })
 })
 
-test('si el JavaScript no carga, la carta aparece igualmente (S-11)', async ({ page, problemas }) => {
+test('si el JavaScript no carga, la carta aparece igualmente', async ({ page, problemas }) => {
   await page.route('**/assets/*.js', (ruta) => ruta.abort())
   await page.goto('/')
   await expect(page.locator('#titol')).toBeVisible({ timeout: 3500 })
@@ -848,7 +848,7 @@ test('al cargar no se ve la carta antes de abrirse', async ({ page }) => {
   expect(opacidad.estado).toMatch(/^(cerrada|abriendo)$/)
 })
 
-test('con el JavaScript aún sin cargar la carta está oculta y aparece sola a los 2 s (D4)', async ({ page }) => {
+test('con el JavaScript aún sin cargar la carta está oculta y aparece sola a los 2 s', async ({ page }) => {
   await page.route('**/assets/*.js', async (ruta) => {
     await new Promise((resolver) => setTimeout(resolver, 3500))
     await ruta.continue()

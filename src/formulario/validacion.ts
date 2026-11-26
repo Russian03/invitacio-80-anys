@@ -31,7 +31,7 @@ function errorDeNom(nom: string): string | undefined {
 
 /**
  * Valida la entrada del formulario y devuelve todos los errores a la vez.
- * No escapa ni modifica el contenido (salvo `trim`): escapar es cosa de la salida (S-01).
+ * No escapa ni modifica el contenido (salvo `trim`): escapar es cosa de la salida.
  * Las longitudes se cuentan con `.length`, igual que `maxlength` del navegador.
  */
 export function validarRespuesta(entrada: EntradaFormulario): ValidacionRespuesta {

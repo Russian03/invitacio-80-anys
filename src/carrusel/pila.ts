@@ -1,4 +1,4 @@
-/** Orden puro de la pila de fotos (plan 05, T1). `arriba` es el índice de la foto de arriba. */
+/** Orden puro de la pila de fotos. `arriba` es el índice de la foto de arriba. */
 
 function totalValido(total: number): boolean {
   return Number.isInteger(total) && total >= 1

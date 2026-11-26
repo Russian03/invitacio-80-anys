@@ -16,8 +16,8 @@ const aCaja = (r: DOMRect): Caja => ({ left: r.left, top: r.top, width: r.width,
  * Papel decorativo en una sola línea temporal (duración según la distancia): sube por detrás de la parte delantera del sobre (recortado por la
  * línea de la boca, así su borde inferior sigue esa línea), llega arriba del todo con velocidad 0 (su borde inferior queda en la y 324 del fotograma, el superior por encima de la ventana), pasa al frente
  * (se quita el recorte) y baja con ease-out, cambiando de alto hasta la caja de `#carta`.
- * El sobre se queda detrás y solo se funde al final; el fondo de escena es permanente (D36) y no se toca. Lanza si no
- * se puede preparar (medidas no válidas o `animate` roto): quien llama lo trata como fallo (D10).
+ * El sobre se queda detrás y solo se funde al final; el fondo de escena es permanente y no se toca. Lanza si no
+ * se puede preparar (medidas no válidas o `animate` roto): quien llama lo trata como fallo.
  */
 export function animarPapel(capas: CapasPapel): Animacion {
   const { carta, boca, papel, escenario } = capas

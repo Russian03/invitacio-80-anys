@@ -1,4 +1,4 @@
-/** Descriptores de las fuentes propias de la carta (D2 del plan 03). Deben coincidir con los `@font-face` de base.css. */
+/** Descriptores de las fuentes propias de la carta. Deben coincidir con los `@font-face` de base.css. */
 export const FUENTES_CARTA = ['400 1em "Pinyon Script"', '400 1em "Albert Sans"', '600 1em "Albert Sans"'] as const
 
 /**

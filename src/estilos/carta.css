@@ -6,7 +6,7 @@
   --sombra-papel:
     0 1px 1px rgb(0 0 0 / 0.14), 2px 3px 4px rgb(0 0 0 / 0.14), 5px 8px 10px rgb(0 0 0 / 0.13),
     10px 16px 22px rgb(0 0 0 / 0.14), 18px 30px 44px rgb(0 0 0 / 0.16);
-  /* Tiras de relieve de los laterales (D37): 4 px de ancho, repetidas en vertical cada 512 px (el borde se come de 0,4 a 2 px) */
+  /* Tiras de relieve de los laterales: 4 px de ancho, repetidas en vertical cada 512 px (el borde se come de 0,4 a 2 px) */
   --borde-papel-ancho: 4px;
   --borde-papel-alto: 512px;
 }
@@ -42,7 +42,7 @@
 .carta::after,
 .papel-apertura::after,
 .triptico .cara::after {
-  /* Papel del último fotograma del vídeo (D18): baja con el scroll, el pliegue se repite */
+  /* Papel del último fotograma del vídeo: baja con el scroll, el pliegue se repite */
   background-color: var(--color-papel);
   background-image: url('/img/papel.webp');
   background-size: 100% auto;
@@ -147,7 +147,7 @@
   margin: 0;
 }
 
-/* Mientras no está abierta, la carta mide como mucho la pantalla (D5) */
+/* Mientras no está abierta, la carta mide como mucho la pantalla */
 body[data-estado='cerrada'] .carta,
 body[data-estado='abriendo'] .carta {
   max-height: 100dvh;
@@ -158,7 +158,7 @@ body[data-estado='cerrada'] .carta {
   opacity: 0;
 }
 
-/* El título recibe el foco al abrir pero no es interactivo (D8) */
+/* El título recibe el foco al abrir pero no es interactivo */
 #titol:focus {
   outline: none;
 }
@@ -181,7 +181,7 @@ body[data-sin-video][data-estado='abriendo'] .carta {
   }
 }
 
-/* Sin destello (D4): la carta espera al estado; si JavaScript no llega en 2 s, aparece sola */
+/* Sin destello: la carta espera al estado; si JavaScript no llega en 2 s, aparece sola */
 @media (scripting: enabled) {
   body:not([data-estado]) .carta {
     animation: carta-sin-js var(--dur-media) var(--ease-salida) 2s both;

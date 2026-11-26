@@ -31,7 +31,7 @@ export const DURACION_MINIMA_FASE_MS = 400
  */
 export const EASE_FASE = 'cubic-bezier(0.45, 0.05, 0.55, 0.95)'
 
-/** Cuánto antes del final empieza a fundirse el escenario (sobre): el fondo de escena es permanente (D36) y no se funde. */
+/** Cuánto antes del final empieza a fundirse el escenario (sobre): el fondo de escena es permanente y no se funde. */
 export const FUNDIDO_ESCENARIO_MS = 450
 const FIN_FUNDIDO_ESCENARIO_MS = 120
 

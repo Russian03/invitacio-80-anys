@@ -121,7 +121,7 @@ describe('planPapel', () => {
     expect(EASE_FASE).toBe('cubic-bezier(0.45, 0.05, 0.55, 0.95)')
   })
 
-  it('línea temporal única: el punto de giro es subida/total y el fundido del escenario va al final de la bajada; el fondo de escena no se funde (D36)', () => {
+  it('línea temporal única: el punto de giro es subida/total y el fundido del escenario va al final de la bajada; el fondo de escena no se funde', () => {
     const plan = planPapel(ESCENARIO, CARTA, 1080)!
     expect(plan.offsetArriba).toBeCloseTo(plan.duracionSubeMs / plan.duracionTotalMs, 10)
     expect(Object.keys(plan.fundido)).toEqual(['escenario'])

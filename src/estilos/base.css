@@ -1,4 +1,4 @@
-/* Fuentes propias (D1 del plan 03): subconjunto latin de Fontsource, OFL-1.1; el unicode-range cubre à è é í ï ò ó ú ü ç y · */
+/* Fuentes propias: subconjunto latin de Fontsource, OFL-1.1; el unicode-range cubre à è é í ï ò ó ú ü ç y · */
 @font-face {
   font-family: 'Pinyon Script';
   font-style: normal;
@@ -18,7 +18,7 @@
 }
 
 :root {
-  /* Color de respaldo de la mesa (D36): el tono medio de public/img/fondo-escena.webp, recoloreado a #462827 (media medida rgb 70,40,39); el fondo permanente de la página, visible si la imagen no carga y mientras llega */
+  /* Color de respaldo de la mesa: el tono medio de public/img/fondo-escena.webp, recoloreado a #462827 (media medida rgb 70,40,39); el fondo permanente de la página, visible si la imagen no carga y mientras llega */
   --color-mesa: #462827;
   --color-papel: #f3eee1;
   --color-texto: #462827; /* marrón oscuro (prueba pedida 2026-11-05): 11,4:1 sobre el papel */
@@ -56,16 +56,16 @@
   --borde-recuadro: rgb(70 40 39 / 0.62);
   --fondo-recuadro: rgb(255 253 248 / 0.72);
   --margen-mesa: var(--esp-7);
-  /* Ancho final del papel en ordenador (D32); en ventanas estrechas manda el ancho menos los márgenes */
+  /* Ancho final del papel en ordenador; en ventanas estrechas manda el ancho menos los márgenes */
   --ancho-papel: 760px;
 
-  /* Escenario del sobre (D30): = CENTRO_SOBRE, LIMITE_ANCHO_VW y LIMITE_ALTO_DVH de src/carta/geometria.ts; un test e2e lo comprueba */
+  /* Escenario del sobre: = CENTRO_SOBRE, LIMITE_ANCHO_VW y LIMITE_ALTO_DVH de src/carta/geometria.ts; un test e2e lo comprueba */
   --sobre-centro-x: 0.495;
   --sobre-centro-y: 0.441;
   --escenario-max-ancho: 206.3vw;
   --escenario-max-alto: 225.3dvh;
 
-  /* Tokens de movimiento (diseno.md → Movimiento) */
+  /* Tokens de movimiento */
   --dur-rapida: 150ms;
   --dur-media: 300ms;
   --dur-lenta: 500ms;
@@ -105,7 +105,7 @@ body {
 }
 
 /*
- * Contenedor del scroll (D5, D36): barra fina y translúcida con la pista transparente. `stable both-edges` reserva el mismo
+ * Contenedor del scroll: barra fina y translúcida con la pista transparente. `stable both-edges` reserva el mismo
  * hueco a ambos lados, transparente (se ve el fondo), así que al aparecer la barra la carta no se mueve ni cambia de ancho.
  * Con barras superpuestas (móvil) no reserva nada. `100dvh` no hace falta: `fixed` + `inset: 0` sigue a la ventana visible.
  */
@@ -121,7 +121,7 @@ body {
   scrollbar-color: rgb(255 255 255 / 0.28) transparent;
 }
 
-/* Mientras la carta no está abierta no se puede bajar (D5) */
+/* Mientras la carta no está abierta no se puede bajar */
 body[data-estado='cerrada'] .mesa,
 body[data-estado='abriendo'] .mesa {
   overflow-y: hidden;

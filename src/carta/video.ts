@@ -5,7 +5,7 @@ export const VIDEO_APERTURA = `${import.meta.env.BASE_URL}video/sobre.mp4`
 export const IMAGEN_SOBRE = `${import.meta.env.BASE_URL}img/sobre-abierto.webp`
 
 export const TOPE_ARRANQUE_VIDEO_MS = 4000
-/** Espera máxima a que la imagen fija del sobre se descargue y decodifique (D10, D34). */
+/** Espera máxima a que la imagen fija del sobre se descargue y decodifique. */
 export const TOPE_IMAGEN_MS = 4000
 export const MARGEN_FIN_VIDEO_MS = 2000
 export const TOPE_FIN_VIDEO_MS = 15000

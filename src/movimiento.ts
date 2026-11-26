@@ -14,7 +14,7 @@ export function conTope(promesa: Promise<unknown>, ms: number): Promise<void> {
   })
 }
 
-/** JS decide si descarga el vídeo, así que lee la preferencia del sistema (D16). */
+/** JS decide si descarga el vídeo, así que lee la preferencia del sistema. */
 export function prefiereMovimientoReducido(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }

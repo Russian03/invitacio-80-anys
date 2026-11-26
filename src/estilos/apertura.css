@@ -1,10 +1,10 @@
 /*
- * Escenario del sobre (02f). Un escenario 16:9 fijo con la imagen fija debajo y el vídeo encima, sobre un fondo
+ * Escenario del sobre. Un escenario 16:9 fijo con la imagen fija debajo y el vídeo encima, sobre un fondo
  * de escena en degradado que imita el del vídeo. Sin JS o con movimiento reducido no se ve nada de esto.
  * El tamaño y la posición repiten `cajaEscenario()` de src/carta/geometria.ts.
  */
 /*
- * Fondo permanente (D36) y escenario del sobre (02f). `.fondo-escena` es la imagen `fondo-escena.webp` (el último
+ * Fondo permanente y escenario del sobre. `.fondo-escena` es la imagen `fondo-escena.webp` (el último
  * fotograma sin sobre ni sombra, con el color del exterior): queda fija detrás de la carta y del scroll para siempre,
  * también sin JS o con movimiento reducido. Mientras se abre, el escenario 16:9 (imagen fija debajo y vídeo encima)
  * se coloca encima exactamente sobre esa imagen (mismas medidas en `::before`), así que el fondo del vídeo y el de la

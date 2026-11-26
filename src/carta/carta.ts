@@ -60,7 +60,7 @@ export function iniciarCarta(body: HTMLElement): void {
     aplicar()
     if (estado !== 'abierta') return
     titulo.focus({ preventScroll: true })
-    // La entrada de lo inicial arranca en el mismo tic que el fundido para que no parpadee (D3); con movimiento reducido solo hay fundido (D4)
+    // La entrada de lo inicial arranca en el mismo tic que el fundido para que no parpadee; con movimiento reducido solo hay fundido
     if (!prefiereMovimientoReducido()) animarEntrada([...carta.querySelectorAll<HTMLElement>('[data-entrada]')])
     // Fundido en dos casos: tras un fallo (carta abierta de golpe) o al relevar la imagen fija (`data-fase`).
     // Con movimiento reducido o sin vídeo, el fundido lo hace el CSS
@@ -83,7 +83,7 @@ export function iniciarCarta(body: HTMLElement): void {
     video.load()
   }
 
-  // Estado seguro: carta abierta con fundido y descarga del vídeo soltada (D10, D14). Llamarla dos veces es inocuo
+  // Estado seguro: carta abierta con fundido y descarga del vídeo soltada. Llamarla dos veces es inocuo
   const fallar = () => {
     cancelarPapel?.()
     pasar('fallo')
@@ -103,7 +103,7 @@ export function iniciarCarta(body: HTMLElement): void {
     video.muted = true
     // La imagen fija se descarga y decodifica mientras suena el vídeo, para que el relevo no parpadee
     imagen.src = IMAGEN_SOBRE
-    // Con tope: si la petición se cuelga, `false` lleva a `fallar()` en lugar de dejar la carta oculta (D10)
+    // Con tope: si la petición se cuelga, `false` lleva a `fallar()` en lugar de dejar la carta oculta
     const imagenLista = Promise.race([
       imagen.decode().then(
         () => true,
@@ -123,7 +123,7 @@ export function iniciarCarta(body: HTMLElement): void {
     // Sobre quieto: imagen fija en lugar del vídeo, que se suelta para que no decodifique en vano
     body.dataset.fase = 'papel-sube'
     soltarVideo()
-    // El papel sube y crece; si no se puede animar o se cancela, fundido (D10, D34)
+    // El papel sube y crece; si no se puede animar o se cancela, fundido
     const capas = { body, carta, boca, papel, escenario }
     const triptico = body.querySelector<HTMLElement>('#triptico')
     const papelAnimado = triptico && usaTriptico() ? animarTriptico({ ...capas, triptico }) : animarPapel(capas)
@@ -141,6 +141,6 @@ export function iniciarCarta(body: HTMLElement): void {
   }
 
   aplicar()
-  // Si algo falla, lo seguro es enseñar la carta abierta (D10)
+  // Si algo falla, lo seguro es enseñar la carta abierta
   void abrir().catch(fallar)
 }

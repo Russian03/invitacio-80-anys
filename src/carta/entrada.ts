@@ -2,7 +2,7 @@ import { EASE_SALIDA } from '../movimiento'
 import { DESPLAZAMIENTO_ENTRADA_PX, planEntrada } from './plan-entrada'
 
 /**
- * Entrada escalonada de lo inicial (D3): cada elemento sube `DESPLAZAMIENTO_ENTRADA_PX` y aparece. `fill: 'backwards'`
+ * Entrada escalonada de lo inicial: cada elemento sube `DESPLAZAMIENTO_ENTRADA_PX` y aparece. `fill: 'backwards'`
  * los mantiene ocultos durante su retraso, sin parpadeo. Si `animate` no existe, no hace nada y el contenido se ve.
  */
 export function animarEntrada(elementos: readonly HTMLElement[]): Animation[] {

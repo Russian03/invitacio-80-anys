@@ -1,12 +1,12 @@
-/** Duración de cada elemento: igual a `--dur-lenta` (diseno.md → Movimiento; D3). WAAPI no lee variables CSS. */
+/** Duración de cada elemento: igual a `--dur-lenta`. WAAPI no lee variables CSS. */
 export const DURACION_ENTRADA_MS = 500
-/** Espera desde que la carta pasa a `abierta` hasta que entra el primero (D3). */
+/** Espera desde que la carta pasa a `abierta` hasta que entra el primero. */
 export const RETRASO_INICIAL_ENTRADA_MS = 200
-/** Separación entre elementos consecutivos (D3). */
+/** Separación entre elementos consecutivos. */
 export const PASO_ENTRADA_MS = 120
-/** Tope del total (último retraso + duración): si hay muchos elementos, el paso se comprime (D3). */
+/** Tope del total (último retraso + duración): si hay muchos elementos, el paso se comprime. */
 export const DURACION_MAXIMA_ENTRADA_MS = 1400
-/** Cuánto suben los elementos al entrar (D3). */
+/** Cuánto suben los elementos al entrar. */
 export const DESPLAZAMIENTO_ENTRADA_PX = 12
 
 export interface PasoEntrada {

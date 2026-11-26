@@ -15,7 +15,7 @@
 /*
  * Marco antiguo = imagen PNG con hueco transparente (ref-1, 462x540). Las anchas usan el
  * mismo marco girado 90° (segundo asset, 540x462). La foto va debajo del marco, en el hueco
- * medido en el PNG (% del figure). Sombra con drop-shadow marrón (D8): el PNG tiene
+ * medido en el PNG (% del figure). Sombra con drop-shadow marrón: el PNG tiene
  * márgenes transparentes y un box-shadow dibujaría un rectángulo.
  */
 .foto {

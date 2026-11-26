@@ -1,10 +1,10 @@
 import { abrirCarta, expect, test } from './fixtures'
 
-// Ancho final del papel en ordenador (D32); `--ancho-papel` de base.css
+// Ancho final del papel en ordenador; `--ancho-papel` de base.css
 const ANCHO_PAPEL_PX = 760
 
 
-// El vídeo de apertura no se reproduce en el Chromium de Playwright (D21)
+// El vídeo de apertura no se reproduce en el Chromium de Playwright
 test.use({ reducedMotion: 'reduce' })
 
 test('muestra la mesa marrón #462827 y la carta en catalán', async ({ page, isMobile }) => {
@@ -56,7 +56,7 @@ test('muestra errores en catalán si se envía vacío', async ({ page }) => {
   await expect(page.locator('input[name="assistira"]').first()).toHaveAttribute('aria-invalid', 'true')
 })
 
-test('el nombre se muestra como texto (S-01)', async ({ page }) => {
+test('el nombre se muestra como texto', async ({ page }) => {
   const nombre = '<img src=x onerror=window.__xss=1>'
   await page.goto('/')
   await abrirCarta(page)
@@ -123,7 +123,7 @@ test('la carta lleva la textura del papel (en su ::after) y se desplaza con el s
   expect((await request.get(url)).status()).toBe(200)
 })
 
-test('los laterales de la carta son irregulares (papel de trapo): relieve de 1 a 3 px, uniforme de arriba abajo, con la sombra bajo la hoja (D37)', async ({ page, request }) => {
+test('los laterales de la carta son irregulares (papel de trapo): relieve de 1 a 3 px, uniforme de arriba abajo, con la sombra bajo la hoja', async ({ page, request }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
   await abrirCarta(page)
@@ -190,7 +190,7 @@ test('la carta empieza con un margen azul arriba y acaba con otro abajo', async 
   expect(abajo).toBeGreaterThanOrEqual(40)
 })
 
-test('en escritorio el papel mide el ancho final del papel (D32)', async ({ page, isMobile }) => {
+test('en escritorio el papel mide el ancho final del papel', async ({ page, isMobile }) => {
   test.skip(isMobile, 'el ancho final es solo de escritorio')
   await page.setViewportSize({ width: 1920, height: 1080 })
   await page.goto('/')
@@ -216,7 +216,7 @@ for (const tam of [
   })
 }
 
-test.describe('ancho del papel (D32)', () => {
+test.describe('ancho del papel', () => {
   // Mide min(760, ancho útil − 32); el ancho útil (clientWidth de .mesa) descuenta el hueco simétrico de la barra, por eso se mide
   for (const tam of [
     { width: 1920, height: 360, tope: true },
