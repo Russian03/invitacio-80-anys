@@ -53,7 +53,7 @@ test.describe('tipografías propias', () => {
   })
 })
 
-const ETIQUETAS = ['DATA', 'HORA', 'LLOC', 'PROGRAMA', 'COM ARRIBAR', 'CONFIRMA LA TEVA ASSISTÈNCIA']
+const ETIQUETAS = ['RECORDS', 'DATA', 'HORA', 'LLOC', 'PROGRAMA', 'COM ARRIBAR', 'CONFIRMA LA TEVA ASSISTÈNCIA']
 
 // Luminancia relativa WCAG de un color "rgb(r, g, b)"
 function luminancia(css: string): number {
@@ -176,12 +176,12 @@ test.describe('estilos de los bloques (T5)', () => {
 })
 
 test.describe('pliegues y líneas finas (T6)', () => {
-  test('hay 7 pliegues decorativos', async ({ page }) => {
+  test('hay 8 pliegues decorativos', async ({ page }) => {
     await page.goto('/')
     await abrirCarta(page)
     const pliegues = page.locator('#carta > .pliegue')
-    await expect(pliegues).toHaveCount(7)
-    for (let i = 0; i < 7; i++) await expect(pliegues.nth(i)).toHaveAttribute('aria-hidden', 'true')
+    await expect(pliegues).toHaveCount(8)
+    for (let i = 0; i < 8; i++) await expect(pliegues.nth(i)).toHaveAttribute('aria-hidden', 'true')
   })
 
   for (const tam of [

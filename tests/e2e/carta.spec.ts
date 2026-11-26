@@ -14,7 +14,7 @@ test.describe('sin JavaScript', () => {
   test('sin JavaScript todo lo marcado con data-entrada se ve', async ({ page }) => {
     await page.goto('/')
     const marcados = page.locator('[data-entrada]')
-    expect(await marcados.count()).toBe(5)
+    expect(await marcados.count()).toBe(6)
     for (const elemento of await marcados.all()) {
       await expect(elemento).toBeVisible()
       await expect(elemento).toHaveCSS('opacity', '1')
@@ -107,7 +107,7 @@ async function leerEntrada(page: Page): Promise<CapturaEntrada> {
 
 /** Comprueba la entrada escalonada de lo inicial (D3). */
 function comprobarEntrada(captura: CapturaEntrada) {
-  expect(captura.entrada).toHaveLength(5)
+  expect(captura.entrada).toHaveLength(6)
   let anterior = -1
   for (const elemento of captura.entrada) {
     expect(elemento.animaciones).toHaveLength(1)
@@ -267,7 +267,7 @@ test.describe('apertura con vídeo', () => {
     await expect(cuerpo).toHaveAttribute('data-estado', 'abriendo')
     await page.locator('#video-apertura').dispatchEvent('ended')
     await expect(cuerpo).toHaveAttribute('data-estado', 'abierta')
-    await page.evaluate(() => (document.querySelector('a, button, input') as HTMLElement).focus({ preventScroll: true }))
+    await page.evaluate(() => (document.querySelector('#form-confirmacio input') as HTMLElement).focus({ preventScroll: true }))
     await page.locator('#video-apertura').dispatchEvent('ended')
     await page.waitForTimeout(100)
     await expect(page.locator('#titol')).not.toBeFocused()
@@ -792,7 +792,7 @@ test.describe('con movimiento reducido', () => {
     await page.goto('/')
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3500 })
     const captura = await leerEntrada(page)
-    expect(captura.entrada).toHaveLength(5)
+    expect(captura.entrada).toHaveLength(6)
     for (const elemento of captura.entrada) expect(elemento.animaciones).toEqual([])
   })
 

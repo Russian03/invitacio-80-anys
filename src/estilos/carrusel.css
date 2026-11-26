@@ -1,0 +1,121 @@
+/* Carrusel de fotos (plan 05). Sin transition ni animation: los pasos son WAAPI (D10). */
+
+.carrusel .pila {
+  /* Todas las fotos en la misma celda; el relleno deja sitio a las esquinas giradas (hasta 5°) */
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  margin: var(--esp-4) auto var(--esp-5);
+  padding: var(--esp-4) var(--esp-2);
+}
+
+/*
+ * Marco antiguo = imagen PNG con hueco transparente (ref-1, 462x540). Las anchas usan el
+ * mismo marco girado 90° (segundo asset, 540x462). La foto va debajo del marco, en el hueco
+ * medido en el PNG (% del figure). Sombra con drop-shadow marrón (D8): el PNG tiene
+ * márgenes transparentes y un box-shadow dibujaría un rectángulo.
+ */
+.foto {
+  --giro: 0deg;
+  --arrastre: 0px;
+  --marco: url('/img/marco-foto.png');
+  position: relative;
+  grid-area: 1 / 1;
+  place-self: center;
+  box-sizing: border-box;
+  width: min(220px, 100%);
+  aspect-ratio: 462 / 540;
+  margin: 0;
+  filter: drop-shadow(0 4px 8px rgb(70 40 39 / 0.35));
+  transform: translateX(var(--arrastre)) rotate(var(--giro));
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.foto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--marco) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.foto-ancha {
+  --marco: url('/img/marco-foto-ancho.png');
+  width: min(280px, 100%);
+  aspect-ratio: 540 / 462;
+}
+
+/* Inclinaciones (D5); sin JS la 1 queda arriba por z-index decreciente */
+.foto:nth-child(1) { --giro: -4deg; z-index: 6; }
+.foto:nth-child(2) { --giro: 3deg; z-index: 5; }
+.foto:nth-child(3) { --giro: -1.5deg; z-index: 4; }
+.foto:nth-child(4) { --giro: 5deg; z-index: 3; }
+.foto:nth-child(5) { --giro: -3deg; z-index: 2; }
+.foto:nth-child(6) { --giro: 2deg; z-index: 1; }
+
+/* Foto en el hueco del marco (1 % de solape bajo el marco); recorte cover y B/N con cualquier foto (D7) */
+.foto img {
+  position: absolute;
+  top: 8.8%;
+  left: 12.6%;
+  display: block;
+  width: 74.8%;
+  height: 83.1%;
+  object-fit: cover;
+  filter: grayscale(1);
+  background: #c9c9c9;
+}
+
+.foto-ancha img {
+  top: 12.6%;
+  left: 8.1%;
+  width: 83.1%;
+  height: 74.8%;
+}
+
+.carrusel-controles {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.carrusel-controles[hidden] {
+  display: none;
+}
+
+.carrusel .boton-secundario {
+  min-width: 48px;
+  min-height: 56px;
+  padding: 0 var(--esp-4);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-principal);
+  background: transparent;
+  border: 2px solid var(--color-principal);
+  border-radius: var(--radio-control);
+  cursor: pointer;
+}
+
+.carrusel .boton-secundario:active {
+  background: rgb(70 40 39 / 0.1);
+}
+
+.carrusel .contador {
+  color: var(--color-texto-sec);
+  white-space: nowrap;
+}
+
+/* En pantallas estrechas, botones en dos columnas y contador en su propia fila */
+@media (max-width: 399px) {
+  .carrusel-controles {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .carrusel .contador {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+}
