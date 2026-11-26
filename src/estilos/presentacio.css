@@ -1,0 +1,67 @@
+/* Texto de presentación con su retrato, en color y con el mismo marco antiguo que las fotos */
+.presentacio {
+  display: flow-root;
+}
+
+/* Un solo párrafo; en móvil rodea la foto, que queda arriba a la derecha */
+.presentacio p {
+  margin: 0;
+}
+
+.retrat {
+  position: relative;
+  float: right;
+  width: clamp(104px, 42%, 220px);
+  aspect-ratio: 462 / 540;
+  margin: var(--esp-1) 0 var(--esp-2) var(--esp-3);
+  filter: drop-shadow(0 4px 8px rgb(70 40 39 / 0.35));
+  transform: rotate(3deg);
+}
+
+.retrat::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/img/marco-foto.png') center / 100% 100% no-repeat;
+}
+
+/* Foto en el hueco del marco, como en el carrusel */
+.retrat img {
+  position: absolute;
+  top: 8.8%;
+  left: 12.6%;
+  display: block;
+  width: 74.8%;
+  height: 83.1%;
+  object-fit: cover;
+  background: #c9c9c9;
+}
+
+/* En los móviles más estrechos, foto algo menor para que el texto respire */
+@media (max-width: 359px) {
+  .retrat {
+    width: 96px;
+    margin-left: var(--esp-2);
+  }
+}
+
+/* Con sitio de sobra, el texto a la izquierda de una foto grande */
+@media (min-width: 720px) {
+  .presentacio {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 250px;
+    align-items: center;
+    column-gap: var(--esp-7);
+  }
+
+  .presentacio p {
+    grid-area: 1 / 1;
+  }
+
+  .retrat {
+    grid-area: 1 / 2;
+    float: none;
+    width: 100%;
+    margin: 0;
+  }
+}

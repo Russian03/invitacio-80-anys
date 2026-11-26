@@ -2,6 +2,7 @@
 .calendari {
   max-width: 420px;
   margin-inline: auto;
+  text-align: center;
   font-variant-numeric: lining-nums;
 }
 

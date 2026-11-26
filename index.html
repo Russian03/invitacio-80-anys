@@ -35,42 +35,26 @@
       </div>
       <article id="carta" class="carta" aria-labelledby="titol">
         <header class="carta-cabecera">
-          <div class="linea-fina" aria-hidden="true" data-entrada></div>
-          <p class="subtitulo" data-entrada>VINE A CELEBRAR</p>
-          <!-- PROVISIONAL: dato real pendiente (prd.md → Dudas) -->
-          <h1 id="titol" tabindex="-1" class="titulo-script" data-entrada>Lorem Ipsum</h1>
-          <p class="subtitulo" data-entrada>ELS 80 ANYS</p>
+          <p class="subtitulo" data-entrada>80<span class="ordinal">è</span> aniversari</p>
+          <h1 id="titol" tabindex="-1" class="titulo-script" data-entrada>de la Kika</h1>
         </header>
 
-        <div class="pliegue" aria-hidden="true"></div>
+        <div class="presentacio" data-entrada>
+          <figure class="retrat"><img src="/img/fotos/foto-10.webp" alt="La Kika" width="849" height="1132" decoding="async" /></figure>
+          <p>Vaig néixer el 27 de febrer de 1947 i aquest any faig 80 anys. M’agradaria celebrar-los amb tots aquells que, d’una manera o altra, han fet possible poder arribar a aquest dia tan especial.</p>
+        </div>
 
-        <section id="carrusel" class="bloque carrusel" aria-labelledby="bloque-records" aria-roledescription="carrusel" data-entrada>
-          <h2 id="bloque-records" class="etiqueta">RECORDS</h2>
-          <div class="pila">
-            <!-- PROVISIONAL: foto real pendiente (prd.md → Dudas). Cambiar: copiar foto-N.webp (alta 3:4 o ancha 4:3, ≈1200 px de lado largo, ≤150 kB) a public/img/fotos/, cambiar src, alt, width y height (la clase foto-alta o foto-ancha no cambia), borrar mostra-N.svg y este comentario -->
-            <figure class="foto foto-alta"><img src="/img/fotos/mostra-1.svg" alt="Foto de mostra 1 de 6" width="600" height="800" loading="lazy" decoding="async" draggable="false" /></figure>
-            <!-- PROVISIONAL: foto real pendiente (prd.md → Dudas) -->
-            <figure class="foto foto-ancha"><img src="/img/fotos/mostra-2.svg" alt="Foto de mostra 2 de 6" width="800" height="600" loading="lazy" decoding="async" draggable="false" /></figure>
-            <!-- PROVISIONAL: foto real pendiente (prd.md → Dudas) -->
-            <figure class="foto foto-alta"><img src="/img/fotos/mostra-3.svg" alt="Foto de mostra 3 de 6" width="600" height="800" loading="lazy" decoding="async" draggable="false" /></figure>
-            <!-- PROVISIONAL: foto real pendiente (prd.md → Dudas) -->
-            <figure class="foto foto-ancha"><img src="/img/fotos/mostra-4.svg" alt="Foto de mostra 4 de 6" width="800" height="600" loading="lazy" decoding="async" draggable="false" /></figure>
-            <!-- PROVISIONAL: foto real pendiente (prd.md → Dudas) -->
-            <figure class="foto foto-alta"><img src="/img/fotos/mostra-5.svg" alt="Foto de mostra 5 de 6" width="600" height="800" loading="lazy" decoding="async" draggable="false" /></figure>
-            <!-- PROVISIONAL: foto real pendiente (prd.md → Dudas) -->
-            <figure class="foto foto-ancha"><img src="/img/fotos/mostra-6.svg" alt="Foto de mostra 6 de 6" width="800" height="600" loading="lazy" decoding="async" draggable="false" /></figure>
-          </div>
-          <div class="carrusel-controles" hidden>
-            <button type="button" class="boton-secundario" data-accion="anterior"><span aria-hidden="true">←</span> Anterior</button>
-            <p class="contador" aria-live="polite">1 de 6</p>
-            <button type="button" class="boton-secundario" data-accion="siguiente">Següent <span aria-hidden="true">→</span></button>
+        <section id="carrusel" class="bloque carrusel" aria-label="Fotos" aria-roledescription="carrusel" data-entrada>
+          <div class="pila" role="group" aria-label="Fotos: passa-les amb les fletxes del teclat">
+            <figure class="foto foto-ancha"><img src="/img/fotos/foto-03.webp" alt="Foto 1 de 4" width="828" height="621" loading="lazy" decoding="async" draggable="false" /></figure>
+            <figure class="foto foto-alta"><img src="/img/fotos/foto-05.webp" alt="Foto 2 de 4" width="858" height="1144" loading="lazy" decoding="async" draggable="false" /></figure>
+            <figure class="foto foto-ancha"><img src="/img/fotos/foto-06.webp" alt="Foto 3 de 4" width="1200" height="900" loading="lazy" decoding="async" draggable="false" /></figure>
+            <figure class="foto foto-alta"><img src="/img/fotos/foto-07.webp" alt="Foto 4 de 4" width="813" height="1084" loading="lazy" decoding="async" draggable="false" /></figure>
           </div>
         </section>
 
-        <div class="pliegue" aria-hidden="true"></div>
-
-        <section class="bloque" aria-labelledby="bloque-data" data-entrada>
-          <h2 id="bloque-data" class="etiqueta nomes-lectors">DATA</h2>
+        <section class="bloque on-quan" aria-labelledby="bloque-on-quan" data-entrada>
+          <h2 id="bloque-on-quan" class="titulo-seccion">On i quan?</h2>
           <p class="nomes-lectors"><time datetime="2027-02-27">Dissabte, 27 de febrer de 2027</time></p>
           <!-- Tira de calendario: solo visual, la fecha se lee en el párrafo anterior -->
           <div class="calendari" aria-hidden="true">
@@ -97,79 +81,50 @@
               <li>28</li>
             </ol>
           </div>
+          <div class="dades">
+            <p class="hora">A les <time datetime="14:00">14 h</time></p>
+            <div class="lloc">
+              <p class="texto-script">Mas Blanc</p>
+              <address class="adreca">Camí de Dalt d’Alella,&nbsp;15</address>
+            </div>
+          </div>
+          <a class="pastilla" href="https://www.google.com/maps/place/Restaurant+Mas+Blanc+Tiana/@41.487382,2.267159,628m/data=!3m2!1e3!4b1!4m6!3m5!1s0x12a4ba31becadc2f:0x8e846421e3b0a1f5!8m2!3d41.487378!4d2.2697339!16s%2Fg%2F11b8b2nqg6" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2a7.5 7.5 0 0 0-7.5 7.5c0 5.3 6.4 11.6 6.7 11.9a1.1 1.1 0 0 0 1.6 0c.3-.3 6.7-6.6 6.7-11.9A7.5 7.5 0 0 0 12 2Zm0 10.3a2.8 2.8 0 1 1 0-5.6 2.8 2.8 0 0 1 0 5.6Z" /></svg>
+            Veure la ubicació<span class="nomes-lectors"> (s’obre en una pestanya nova)</span>
+          </a>
         </section>
 
-        <div class="pliegue" aria-hidden="true"></div>
+        <aside class="regal" aria-label="Aportació">
+          <p>Si voleu fer alguna cosa, tant el menjador del Raval com jo estarem molt contents i agraïts.</p>
+          <dl class="compte">
+            <dt>Número de compte</dt>
+            <!-- PROVISIONAL: número de cuenta pendiente. Cambiar los dos span por el número en texto normal -->
+            <dd><span aria-hidden="true">ES•• •••• •••• •••• •••• ••••</span><span class="nomes-lectors">pendent</span></dd>
+          </dl>
+        </aside>
 
-        <section class="bloque" aria-labelledby="bloque-hora">
-          <h2 id="bloque-hora" class="etiqueta">HORA</h2>
-          <!-- PROVISIONAL: dato real pendiente (prd.md → Dudas) -->
-          <p>A les <time datetime="13:00">13:00 h</time></p>
-        </section>
-
-        <div class="pliegue" aria-hidden="true"></div>
-
-        <section class="bloque" aria-labelledby="bloque-lloc">
-          <h2 id="bloque-lloc" class="etiqueta">LLOC</h2>
-          <!-- PROVISIONAL: dato real pendiente (prd.md → Dudas) -->
-          <p class="texto-script">Lorem Ipsum</p>
-          <p>Carrer de Lorem, 1 · 00000 Ipsum</p>
-        </section>
-
-        <div class="pliegue" aria-hidden="true"></div>
-
-        <section class="bloque" aria-labelledby="bloque-programa">
-          <h2 id="bloque-programa" class="etiqueta">PROGRAMA</h2>
-          <!-- PROVISIONAL: dato real pendiente (prd.md → Dudas) -->
-          <ol class="programa">
-            <li><time datetime="13:00">13:00</time> <span>Benvinguda</span></li>
-            <li><time datetime="14:00">14:00</time> <span>Dinar</span></li>
-            <li><time datetime="16:30">16:30</time> <span>Pastís i brindis</span></li>
-            <li><time datetime="17:30">17:30</time> <span>Música i ball</span></li>
-          </ol>
-        </section>
-
-        <div class="pliegue" aria-hidden="true"></div>
-
-        <section class="bloque" aria-labelledby="bloque-com-arribar">
-          <h2 id="bloque-com-arribar" class="etiqueta">COM ARRIBAR</h2>
-          <!-- PROVISIONAL: dato real pendiente (prd.md → Dudas) -->
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.</p>
-        </section>
-
-        <div class="pliegue" aria-hidden="true"></div>
-
-        <div class="linea-fina linea-cierre" aria-hidden="true"></div>
-
-        <div class="pliegue" aria-hidden="true"></div>
-
-        <section id="confirmacio" class="bloque" aria-labelledby="titol-confirmacio">
-          <h2 id="titol-confirmacio" class="etiqueta">CONFIRMA LA TEVA ASSISTÈNCIA</h2>
+        <section id="confirmacio" class="bloque resposta" aria-labelledby="titol-confirmacio">
+          <h2 id="titol-confirmacio" class="titulo-seccion">Confirma la teva assistència</h2>
           <form id="form-confirmacio" method="post" novalidate>
             <div class="campo">
-              <label for="nom">Nom i cognoms (obligatori)</label>
-              <input id="nom" name="nom" type="text" autocomplete="name" required minlength="2" maxlength="80" aria-describedby="error-nom" />
+              <label for="nom" class="nomes-lectors">Nom i cognoms</label>
+              <input id="nom" name="nom" type="text" placeholder="Nom i cognoms" autocomplete="name" required minlength="2" maxlength="80" aria-describedby="error-nom" />
               <p id="error-nom" class="error-campo" hidden></p>
             </div>
 
             <fieldset class="campo" aria-describedby="error-assistira">
-              <legend>Hi seràs? (obligatori)</legend>
-              <label class="opcion"><input type="radio" name="assistira" value="sí" required /> Sí, hi seré</label>
-              <label class="opcion"><input type="radio" name="assistira" value="no" required /> No hi podré anar</label>
+              <legend>Hi seràs?</legend>
+              <div class="opciones">
+                <label class="opcion"><input type="radio" name="assistira" value="sí" required /> <span>Sí, hi seré</span></label>
+                <label class="opcion"><input type="radio" name="assistira" value="no" required /> <span>No hi podré anar</span></label>
+              </div>
               <p id="error-assistira" class="error-campo" hidden></p>
             </fieldset>
 
             <div class="campo">
-              <label for="alergens">Al·lèrgens o intoleràncies (opcional)</label>
-              <p id="ajuda-alergens" class="nota">Si no en tens, deixa-ho en blanc.</p>
-              <textarea id="alergens" name="alergens" rows="3" maxlength="300" aria-describedby="ajuda-alergens error-alergens"></textarea>
+              <label for="alergens" class="nomes-lectors">Al·lèrgens o intoleràncies (opcional)</label>
+              <textarea id="alergens" name="alergens" rows="1" maxlength="300" placeholder="Al·lèrgens o intoleràncies (opcional)" aria-describedby="error-alergens"></textarea>
               <p id="error-alergens" class="error-campo" hidden></p>
-            </div>
-
-            <div class="campo">
-              <label for="comentari">Comentari (opcional)</label>
-              <textarea id="comentari" name="comentari" rows="3" maxlength="500" aria-describedby="error-comentari"></textarea>
-              <p id="error-comentari" class="error-campo" hidden></p>
             </div>
 
             <p id="error-envio" class="error-envio" role="alert" hidden></p>

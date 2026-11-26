@@ -14,7 +14,7 @@ test.describe('sin JavaScript', () => {
   test('sin JavaScript todo lo marcado con data-entrada se ve', async ({ page }) => {
     await page.goto('/')
     const marcados = page.locator('[data-entrada]')
-    expect(await marcados.count()).toBe(6)
+    expect(await marcados.count()).toBe(5)
     for (const elemento of await marcados.all()) {
       await expect(elemento).toBeVisible()
       await expect(elemento).toHaveCSS('opacity', '1')
@@ -107,7 +107,7 @@ async function leerEntrada(page: Page): Promise<CapturaEntrada> {
 
 /** Comprueba la entrada escalonada de lo inicial (D3). */
 function comprobarEntrada(captura: CapturaEntrada) {
-  expect(captura.entrada).toHaveLength(6)
+  expect(captura.entrada).toHaveLength(5)
   let anterior = -1
   for (const elemento of captura.entrada) {
     expect(elemento.animaciones).toHaveLength(1)
@@ -655,11 +655,12 @@ test.describe('apertura con vídeo', () => {
   test('si el vídeo no arranca en 4 s, la carta aparece con un fundido', async ({ page }) => {
     await retenerVideo(page)
     await capturarFundidoAlAbrir(page)
-    const inicio = Date.now()
+    // Reloj monótono: el de pared puede saltar (WSL lo corrige sobre la marcha) y falsear la medida
+    const inicio = performance.now()
     await page.goto('/')
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abriendo')
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 6000 })
-    expect(Date.now() - inicio).toBeGreaterThan(3500)
+    expect(performance.now() - inicio).toBeGreaterThan(3500)
     await esperarFundidoAlAbrir(page)
     await expect(page.locator('#titol')).toBeFocused()
   })
@@ -792,7 +793,7 @@ test.describe('con movimiento reducido', () => {
     await page.goto('/')
     await expect(page.locator('body')).toHaveAttribute('data-estado', 'abierta', { timeout: 3500 })
     const captura = await leerEntrada(page)
-    expect(captura.entrada).toHaveLength(6)
+    expect(captura.entrada).toHaveLength(5)
     for (const elemento of captura.entrada) expect(elemento.animaciones).toEqual([])
   })
 

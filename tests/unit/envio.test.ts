@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { envioSimulado } from '../../src/formulario/envio'
 import type { Respuesta } from '../../src/formulario/validacion'
 
-const respuesta: Respuesta = { nom: 'Maria', assistira: true, alergens: '', comentari: '' }
+const respuesta: Respuesta = { nom: 'Maria', assistira: true, alergens: '' }
 
 describe('envioSimulado', () => {
   beforeEach(() => {

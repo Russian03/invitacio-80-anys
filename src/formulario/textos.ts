@@ -5,7 +5,6 @@ export const ERRORES = {
   nomLargo: 'El nom és massa llarg (màxim 80 caràcters)',
   assistira: 'Indica si vindràs',
   alergensLargo: 'Massa llarg (màxim 300 caràcters)',
-  comentariLargo: 'Massa llarg (màxim 500 caràcters)',
   envio: "No s'ha pogut enviar. Torna-ho a provar.",
 } as const
 

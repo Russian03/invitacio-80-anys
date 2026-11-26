@@ -1,0 +1,41 @@
+/* Aportación: el texto y, en su recuadro, el número de cuenta */
+.regal {
+  display: grid;
+  gap: var(--esp-5);
+}
+
+.regal p {
+  margin: 0;
+}
+
+.compte {
+  margin: 0;
+  padding: var(--esp-4);
+  border: 1px solid var(--borde-recuadro);
+  border-radius: var(--radio-recuadro);
+  background: var(--fondo-recuadro);
+}
+
+.compte dt {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-festa);
+}
+
+.compte dd {
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-nota);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+@media (min-width: 720px) {
+  .regal {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--esp-6);
+  }
+}

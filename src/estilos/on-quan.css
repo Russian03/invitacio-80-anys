@@ -1,0 +1,95 @@
+/* Una sola columna del ancho del calendario: título, casillas y botón comparten sus bordes */
+.carta > .on-quan {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Hora y lugar en dos casillas, como las del calendario, y el botón de ubicación */
+.dades {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--esp-4);
+  margin-top: var(--esp-5);
+}
+
+.bloque .hora {
+  font-size: var(--texto-nota);
+  color: var(--color-texto-sec);
+}
+
+.hora time {
+  display: block;
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: var(--color-texto);
+}
+
+.lloc {
+  padding-left: var(--esp-4);
+  border-left: 2px solid var(--color-texto);
+}
+
+.bloque .texto-script {
+  line-height: 1;
+}
+
+.adreca {
+  font-style: normal;
+  font-size: var(--texto-nota);
+  line-height: 1.35;
+}
+
+.pastilla {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  min-height: 56px;
+  margin-top: var(--esp-5);
+  padding: var(--esp-2) var(--esp-5);
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  color: var(--color-papel);
+  background: var(--color-principal);
+}
+
+/* En los móviles más estrechos ni «Mas Blanc» ni el botón se parten en dos líneas */
+@media (max-width: 359px) {
+  .dades {
+    gap: var(--esp-3);
+  }
+
+  .lloc {
+    padding-left: var(--esp-3);
+  }
+
+  .hora time {
+    font-size: 1.75rem;
+  }
+
+  .bloque .texto-script {
+    font-size: 1.875rem;
+    white-space: nowrap;
+  }
+
+  .pastilla {
+    padding-inline: var(--esp-4);
+    font-size: 1.125rem;
+  }
+}
+
+.pastilla:active {
+  background: var(--color-principal-pulsado);
+}
+
+.pastilla svg {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  fill: currentColor;
+}

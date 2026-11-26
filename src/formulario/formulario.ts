@@ -1,8 +1,9 @@
+import { avisarErrores } from './avisar'
 import type { EnviarRespuesta, Resultado } from './envio'
 import { ERRORES, textoExito } from './textos'
 import { validarRespuesta, type Campo, type EntradaFormulario, type ErroresRespuesta } from './validacion'
 
-const CAMPOS: readonly Campo[] = ['nom', 'assistira', 'alergens', 'comentari']
+const CAMPOS: readonly Campo[] = ['nom', 'assistira', 'alergens']
 const TEXTO_BOTON_ENVIANDO = 'Enviant…'
 
 function textoDe(datos: FormData, nombre: string): string {
@@ -17,7 +18,6 @@ function leerEntrada(form: HTMLFormElement): EntradaFormulario {
     nom: textoDe(datos, 'nom'),
     assistira: assistira === '' ? null : assistira,
     alergens: textoDe(datos, 'alergens'),
-    comentari: textoDe(datos, 'comentari'),
   }
 }
 
@@ -74,6 +74,10 @@ export function iniciarFormulario(form: HTMLFormElement, enviar: EnviarRespuesta
     const validacion = validarRespuesta(leerEntrada(form))
     if (!validacion.ok) {
       mostrarErrores(form, validacion.errores)
+      void avisarErrores(
+        form,
+        CAMPOS.filter((campo) => validacion.errores[campo] !== undefined),
+      )
       return
     }
 

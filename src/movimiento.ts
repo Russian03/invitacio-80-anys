@@ -21,4 +21,6 @@ export function prefiereMovimientoReducido(): boolean {
 
 /** Curva de salida de los tokens CSS (`--ease-salida`); WAAPI no lee variables CSS. */
 export const EASE_SALIDA = 'cubic-bezier(0.22, 1, 0.36, 1)'
+/** Curva de entrada (`--ease-entrada`). */
+export const EASE_ENTRADA = 'cubic-bezier(0.64, 0, 0.78, 0)'
 export const EASE_ENTRADA_SALIDA = 'cubic-bezier(0.65, 0, 0.35, 1)'

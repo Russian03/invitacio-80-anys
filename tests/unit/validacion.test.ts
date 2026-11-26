@@ -6,7 +6,6 @@ const entradaValida: EntradaFormulario = {
   nom: 'Maria Puig',
   assistira: 'sí',
   alergens: '',
-  comentari: '',
 }
 
 const con = (cambios: Partial<EntradaFormulario>): EntradaFormulario => ({ ...entradaValida, ...cambios })
@@ -23,11 +22,10 @@ describe('validarRespuesta', () => {
       nom: '  Maria Puig  ',
       assistira: 'sí',
       alergens: '  gluten ',
-      comentari: ' Hola ',
     })
     expect(resultado).toEqual({
       ok: true,
-      respuesta: { nom: 'Maria Puig', assistira: true, alergens: 'gluten', comentari: 'Hola' },
+      respuesta: { nom: 'Maria Puig', assistira: true, alergens: 'gluten' },
     })
   })
 
@@ -85,16 +83,10 @@ describe('validarRespuesta', () => {
     it('alergens 301 da error', () => {
       expect(erroresDe(con({ alergens: 'a'.repeat(301) })).alergens).toBe(ERRORES.alergensLargo)
     })
-    it('comentari 500 es válido', () => {
-      expect(validarRespuesta(con({ comentari: 'a'.repeat(500) })).ok).toBe(true)
-    })
-    it('comentari 501 da error', () => {
-      expect(erroresDe(con({ comentari: 'a'.repeat(501) })).comentari).toBe(ERRORES.comentariLargo)
-    })
   })
 
   it('una entrada vacía devuelve a la vez los errores de nom y assistira', () => {
-    const errores = erroresDe({ nom: '', assistira: null, alergens: '', comentari: '' })
+    const errores = erroresDe({ nom: '', assistira: null, alergens: '' })
     expect(errores).toEqual({ nom: ERRORES.nomVacio, assistira: ERRORES.assistira })
   })
 
@@ -103,8 +95,7 @@ describe('validarRespuesta', () => {
       nom: 'A',
       assistira: 'x',
       alergens: 'a'.repeat(301),
-      comentari: 'a'.repeat(501),
     })
-    expect(Object.keys(errores).sort()).toEqual(['alergens', 'assistira', 'comentari', 'nom'])
+    expect(Object.keys(errores).sort()).toEqual(['alergens', 'assistira', 'nom'])
   })
 })

@@ -4,7 +4,7 @@
 
 Invitación web en catalán a un 80 cumpleaños, pensada primero para el móvil y para invitados de todas las edades: un sobre que se abre solo, una carta que sale de él, fotos apiladas y un formulario de confirmación.
 
-> **Estado:** en desarrollo. Los textos y las fotos son de muestra y el formulario **todavía no guarda las respuestas**.
+> **Estado:** en desarrollo. Falta el número de cuenta y el formulario **todavía no guarda las respuestas**.
 
 ## Tecnología
 

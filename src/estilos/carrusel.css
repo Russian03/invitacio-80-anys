@@ -1,12 +1,15 @@
-/* Carrusel de fotos (plan 05). Sin transition ni animation: los pasos son WAAPI (D10). */
+/* Carrusel de fotos. Sin transition ni animation: los pasos son WAAPI (carrusel.ts). */
 
 .carrusel .pila {
-  /* Todas las fotos en la misma celda; el relleno deja sitio a las esquinas giradas (hasta 5°) */
+  /* Todas las fotos en la misma celda; el relleno deja sitio a las esquinas giradas (hasta 9°) */
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  margin: var(--esp-4) auto var(--esp-5);
+  /* El aire de arriba y abajo lo da la separación entre apartados */
+  margin: 0 auto;
   padding: var(--esp-4) var(--esp-2);
+  /* Dejar el dedo sobre una foto la detiene: sin menú de la imagen en iOS */
+  -webkit-touch-callout: none;
 }
 
 /*
@@ -17,18 +20,17 @@
  */
 .foto {
   --giro: 0deg;
-  --arrastre: 0px;
   --marco: url('/img/marco-foto.png');
   position: relative;
   grid-area: 1 / 1;
   place-self: center;
   box-sizing: border-box;
-  width: min(220px, 100%);
+  /* En móviles estrechos las altas no llegan a lo ancho: así asoman las anchas de debajo */
+  width: min(220px, 84%);
   aspect-ratio: 462 / 540;
   margin: 0;
   filter: drop-shadow(0 4px 8px rgb(70 40 39 / 0.35));
-  transform: translateX(var(--arrastre)) rotate(var(--giro));
-  touch-action: pan-y;
+  transform: rotate(var(--giro));
   user-select: none;
 }
 
@@ -46,15 +48,28 @@
   aspect-ratio: 540 / 462;
 }
 
-/* Inclinaciones (D5); sin JS la 1 queda arriba por z-index decreciente */
-.foto:nth-child(1) { --giro: -4deg; z-index: 6; }
-.foto:nth-child(2) { --giro: 3deg; z-index: 5; }
-.foto:nth-child(3) { --giro: -1.5deg; z-index: 4; }
-.foto:nth-child(4) { --giro: 5deg; z-index: 3; }
-.foto:nth-child(5) { --giro: -3deg; z-index: 2; }
-.foto:nth-child(6) { --giro: 2deg; z-index: 1; }
+/* En ordenador, fotos más grandes; en ventanas bajas se limitan por la altura, sin bajar del tamaño de móvil */
+@media (min-width: 720px) {
+  .foto {
+    width: clamp(220px, 55vh, 380px);
+  }
 
-/* Foto en el hueco del marco (1 % de solape bajo el marco); recorte cover y B/N con cualquier foto (D7) */
+  .foto-ancha {
+    width: clamp(280px, 70vh, 480px);
+  }
+
+  .carrusel .pila {
+    padding-block: var(--esp-6);
+  }
+}
+
+/* Torcidas para que asome la de detrás; el z-index deja la 1 arriba sin JS (con JS lo pone carrusel.ts) */
+.foto:nth-child(1) { --giro: -9deg; z-index: 4; }
+.foto:nth-child(2) { --giro: -4deg; z-index: 3; }
+.foto:nth-child(3) { --giro: 4deg; z-index: 2; }
+.foto:nth-child(4) { --giro: 9deg; z-index: 1; }
+
+/* Foto en el hueco del marco (1 % de solape bajo el marco); recorte cover */
 .foto img {
   position: absolute;
   top: 8.8%;
@@ -63,7 +78,6 @@
   width: 74.8%;
   height: 83.1%;
   object-fit: cover;
-  filter: grayscale(1);
   background: #c9c9c9;
 }
 
@@ -74,48 +88,22 @@
   height: 74.8%;
 }
 
-.carrusel-controles {
+/* Foto que no carga: aviso en el hueco del marco */
+.foto[data-estado='error'] img {
+  visibility: hidden;
+}
+
+.foto-error {
+  position: absolute;
+  inset: 9% 13%;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--esp-3);
+  place-items: center;
+  margin: 0;
+  text-align: center;
+  color: var(--color-texto);
+  background: #c9c9c9;
 }
 
-.carrusel-controles[hidden] {
-  display: none;
-}
-
-.carrusel .boton-secundario {
-  min-width: 48px;
-  min-height: 56px;
-  padding: 0 var(--esp-4);
-  font: inherit;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-principal);
-  background: transparent;
-  border: 2px solid var(--color-principal);
-  border-radius: var(--radio-control);
-  cursor: pointer;
-}
-
-.carrusel .boton-secundario:active {
-  background: rgb(70 40 39 / 0.1);
-}
-
-.carrusel .contador {
-  color: var(--color-texto-sec);
-  white-space: nowrap;
-}
-
-/* En pantallas estrechas, botones en dos columnas y contador en su propia fila */
-@media (max-width: 399px) {
-  .carrusel-controles {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .carrusel .contador {
-    grid-row: 2;
-    grid-column: 1 / -1;
-  }
+.foto-ancha .foto-error {
+  inset: 13% 9%;
 }

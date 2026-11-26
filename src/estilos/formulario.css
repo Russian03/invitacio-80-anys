@@ -1,3 +1,9 @@
+/* Respuesta: sobre el mismo papel, sin tarjeta; solo las casillas de texto llevan recuadro */
+#titol-confirmacio {
+  text-align: center;
+  text-wrap: balance;
+}
+
 form {
   margin-top: var(--esp-5);
   text-align: left;
@@ -14,54 +20,110 @@ label,
 legend {
   display: block;
   padding: 0;
-  margin-bottom: var(--esp-2);
+  margin-bottom: var(--esp-1);
   font-weight: 600;
+  line-height: 1.35;
 }
 
-.nota {
-  margin: 0 0 var(--esp-2);
-  font-size: var(--texto-nota);
-  color: var(--color-texto-sec);
-}
-
+/* Casillas de texto: recuadro redondeado sin relleno, con su nombre dentro */
 input[type='text'],
 textarea {
+  display: block;
   width: 100%;
-  min-height: 56px;
-  padding: var(--esp-3) var(--esp-4);
+  min-height: 60px;
+  padding: var(--esp-4) var(--esp-4);
+  appearance: none;
   font: inherit;
+  line-height: 1.35;
   color: var(--color-texto);
-  background-color: var(--color-campo);
-  border: 2px solid var(--color-texto);
-  border-radius: var(--radio-control);
+  background: transparent;
+  border: 1.5px solid var(--borde-recuadro);
+  border-radius: var(--radio-recuadro);
+  transition:
+    border-color var(--dur-rapida) ease,
+    box-shadow var(--dur-rapida) ease;
 }
 
+::placeholder {
+  color: var(--color-texto-sec);
+  opacity: 1;
+}
+
+/* Crece con lo escrito; donde no se puede, deja sitio para tres líneas */
 textarea {
-  resize: vertical;
+  field-sizing: content;
+  resize: none;
+}
+
+@supports not (field-sizing: content) {
+  textarea {
+    min-height: 6.5rem;
+  }
+}
+
+/* El autocompletado del navegador no debe pintar la casilla */
+input:autofill {
+  transition: background-color 600000s;
+}
+
+/* El foco pinta el recuadro de teja y lo engorda */
+input[type='text']:focus-visible,
+textarea:focus-visible {
+  border-color: var(--color-festa);
+  box-shadow: 0 0 0 1px var(--color-festa);
+  outline: none;
+}
+
+.opciones {
+  display: grid;
+  justify-items: start;
 }
 
 .opcion {
   display: flex;
   align-items: center;
   gap: var(--esp-3);
-  min-height: 56px;
-  margin-bottom: var(--esp-3);
-  padding: 0 var(--esp-4);
+  min-height: 52px;
+  margin: 0;
   font-weight: 400;
-  background-color: var(--color-campo);
-  border: 2px solid var(--color-texto);
-  border-radius: var(--radio-control);
+  cursor: pointer;
 }
 
 .opcion:has(input:checked) {
-  background-color: #efe3cc;
+  font-weight: 600;
 }
 
+/* Casilla redonda dibujada: aro marrón y, marcada, un punto dentro */
 .opcion input {
+  flex: none;
+  appearance: none;
   width: 24px;
   height: 24px;
   margin: 0;
-  accent-color: var(--color-principal);
+  border: 2px solid var(--color-principal);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.opcion input:checked {
+  background: radial-gradient(circle, var(--color-principal) 0 45%, transparent 50%);
+}
+
+.opcion input:focus-visible {
+  outline: 3px solid var(--color-festa);
+  outline-offset: 2px;
+}
+
+/* Con colores forzados, la casilla y el foco del sistema */
+@media (forced-colors: active) {
+  .opcion input {
+    appearance: auto;
+  }
+
+  input[type='text']:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid;
+  }
 }
 
 .error-campo,
@@ -72,17 +134,23 @@ textarea {
   color: var(--color-error);
 }
 
-[aria-invalid='true'] {
+input[type='text'][aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+.opcion input[aria-invalid='true'] {
   border-color: var(--color-error);
 }
 
 .boton-primario {
   width: 100%;
-  min-height: 56px;
+  min-height: 58px;
   padding: 0 var(--esp-5);
   font: inherit;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-papel);
   background-color: var(--color-principal);
   border: 0;
   border-radius: var(--radio-control);
@@ -98,13 +166,15 @@ textarea {
   cursor: default;
 }
 
-@media (min-width: 600px) {
+@media (max-width: 359px) {
   .boton-primario {
-    width: auto;
+    padding-inline: var(--esp-2);
+    font-size: 1.0625rem;
   }
 }
 
 .exito {
+  position: relative;
   margin-top: var(--esp-5);
   font-weight: 600;
   color: var(--color-exito);
@@ -113,4 +183,11 @@ textarea {
 
 .exito p {
   margin: 0;
+}
+
+/* Columna estrecha y centrada: las líneas de escritura no cruzan toda la carta */
+@media (min-width: 720px) {
+  .carta > .resposta {
+    max-width: 480px;
+  }
 }

@@ -1,0 +1,42 @@
+/* Botones y respuestas: no se seleccionan como texto y se hunden mientras se pulsan (el rebote, en pulsacion.ts) */
+.boton-primario,
+.pastilla,
+.opcion,
+.campo legend {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.boton-primario,
+.pastilla,
+.opcion {
+  touch-action: manipulation;
+  transition:
+    transform var(--dur-rapida) ease,
+    background-color var(--dur-rapida) ease;
+}
+
+/* La respuesta se hunde hacia su círculo */
+.opcion {
+  transform-origin: left center;
+}
+
+.boton-primario:not(:disabled):active,
+.pastilla:active,
+.opcion:active {
+  transform: scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton-primario,
+  .pastilla,
+  .opcion {
+    transition: none;
+  }
+
+  .boton-primario:not(:disabled):active,
+  .pastilla:active,
+  .opcion:active {
+    transform: none;
+  }
+}

@@ -1,19 +1,17 @@
 import { ERRORES } from './textos'
 
-export type Campo = 'nom' | 'assistira' | 'alergens' | 'comentari'
+export type Campo = 'nom' | 'assistira' | 'alergens'
 
 export interface EntradaFormulario {
   nom: string
   assistira: string | null
   alergens: string
-  comentari: string
 }
 
 export interface Respuesta {
   nom: string
   assistira: boolean
   alergens: string
-  comentari: string
 }
 
 export type ErroresRespuesta = Partial<Record<Campo, string>>
@@ -22,7 +20,7 @@ export type ValidacionRespuesta =
   | { ok: true; respuesta: Respuesta }
   | { ok: false; errores: ErroresRespuesta }
 
-export const LIMITES = { nomMin: 2, nomMax: 80, alergensMax: 300, comentariMax: 500 } as const
+export const LIMITES = { nomMin: 2, nomMax: 80, alergensMax: 300 } as const
 
 function errorDeNom(nom: string): string | undefined {
   if (nom.length === 0) return ERRORES.nomVacio
@@ -39,15 +37,13 @@ function errorDeNom(nom: string): string | undefined {
 export function validarRespuesta(entrada: EntradaFormulario): ValidacionRespuesta {
   const nom = entrada.nom.trim()
   const alergens = entrada.alergens.trim()
-  const comentari = entrada.comentari.trim()
   const errores: ErroresRespuesta = {}
 
   const errorNom = errorDeNom(nom)
   if (errorNom) errores.nom = errorNom
   if (entrada.assistira !== 'sí' && entrada.assistira !== 'no') errores.assistira = ERRORES.assistira
   if (alergens.length > LIMITES.alergensMax) errores.alergens = ERRORES.alergensLargo
-  if (comentari.length > LIMITES.comentariMax) errores.comentari = ERRORES.comentariLargo
 
   if (Object.keys(errores).length > 0) return { ok: false, errores }
-  return { ok: true, respuesta: { nom, assistira: entrada.assistira === 'sí', alergens, comentari } }
+  return { ok: true, respuesta: { nom, assistira: entrada.assistira === 'sí', alergens } }
 }

@@ -12,11 +12,11 @@ test('muestra la mesa marrón #462827 y la carta en catalán', async ({ page, is
   await abrirCarta(page)
   await expect(page.locator('html')).toHaveAttribute('lang', 'ca')
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(70, 40, 39)')
-  await expect(page.getByText('VINE A CELEBRAR')).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'DATA' })).toBeVisible()
+  await expect(page.getByText('80è aniversari')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('de la Kika')
+  await expect(page.getByRole('heading', { name: 'On i quan?' })).toBeVisible()
   if (isMobile) {
-    await expect(page.locator('#bloque-com-arribar ~ p')).toHaveCSS('font-size', '20px')
+    await expect(page.locator('.presentacio p')).toHaveCSS('font-size', '20px')
   }
 })
 
@@ -33,7 +33,7 @@ test('no hay scroll horizontal a 360 px', async ({ page }) => {
 test('confirma con Gràcies y el nombre sin cambiar la URL', async ({ page }) => {
   await page.goto('/')
   await abrirCarta(page)
-  await page.getByLabel('Nom i cognoms (obligatori)').fill('Maria')
+  await page.getByLabel('Nom i cognoms').fill('Maria')
   await page.getByLabel('Sí, hi seré').check()
   const boton = page.getByRole('button', { name: 'Confirmar assistència' })
   await boton.click()
@@ -60,7 +60,7 @@ test('el nombre se muestra como texto (S-01)', async ({ page }) => {
   const nombre = '<img src=x onerror=window.__xss=1>'
   await page.goto('/')
   await abrirCarta(page)
-  await page.getByLabel('Nom i cognoms (obligatori)').fill(nombre)
+  await page.getByLabel('Nom i cognoms').fill(nombre)
   await page.getByLabel('No hi podré anar').check()
   await page.getByRole('button', { name: 'Confirmar assistència' }).click()
   await expect(page.locator('#exito-texto')).toContainText(nombre)

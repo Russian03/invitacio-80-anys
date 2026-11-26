@@ -22,7 +22,7 @@ test('publicada en una subcarpeta, todo se carga desde ella y sin errores', asyn
 
   expect(fuera).toEqual([])
   expect(fallidas).toEqual([])
-  for (const recurso of ['video/sobre.mp4', 'img/sobre-abierto.webp', 'img/papel.webp', 'img/marco-foto.png', 'img/fotos/mostra-1.svg']) {
+  for (const recurso of ['video/sobre.mp4', 'img/sobre-abierto.webp', 'img/papel.webp', 'img/marco-foto.png', 'img/fotos/foto-03.webp', 'img/fotos/foto-10.webp']) {
     expect(pedidas).toContain(`${baseURL}${recurso}`)
   }
 })
