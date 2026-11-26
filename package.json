@@ -1,5 +1,6 @@
 {
   "name": "invitacio-80-anys",
+  "description": "Invitación web a un 80 cumpleaños: sobre animado, carta, fotos y confirmación de asistencia.",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:subruta": "playwright test -c playwright.subruta.config.ts",
     "check": "tsc --noEmit"
   },
   "devDependencies": {
