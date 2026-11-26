@@ -16,9 +16,9 @@
     "check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.1",
+    "@playwright/test": "1.65.1",
     "typescript": "7.0.2",
-    "vite": "8.1.6",
-    "vitest": "5.0.4"
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
   }
 }
